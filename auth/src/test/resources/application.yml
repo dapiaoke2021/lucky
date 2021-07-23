@@ -1,0 +1,7 @@
+role:
+  authority:
+    user:
+      - /user/*
+      - /wechat/*
+    admin:
+      - /admin/

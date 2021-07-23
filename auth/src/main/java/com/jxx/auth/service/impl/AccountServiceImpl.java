@@ -11,6 +11,8 @@ import com.jxx.auth.mapper.AccountMapper;
 import com.jxx.auth.service.IAccountService;
 import com.jxx.auth.service.IValidationCodeService;
 import com.jxx.auth.utils.JwtUtil;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,26 +30,28 @@ import java.util.Map;
  * @author jxx
  */
 @Service
-@RefreshScope
 @ConfigurationProperties(prefix = "role")
 public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> implements IAccountService {
 
+    @Setter
+    @Getter
     Map<String, List<String>> authority;
+
     IValidationCodeService validationCodeService;
     JwtUtil jwtUtil;
     AntPathMatcher antPathMatcher;
     AccountMapper accountMapper;
 
     public AccountServiceImpl() {
-        jwtUtil = new JwtUtil();
         antPathMatcher = new AntPathMatcher();
     }
 
     @Autowired
-    public AccountServiceImpl(IValidationCodeService validationCodeService, AccountMapper accountMapper) {
+    public AccountServiceImpl(IValidationCodeService validationCodeService, AccountMapper accountMapper, JwtUtil jwtUtil) {
         this();
         this.validationCodeService = validationCodeService;
         this.accountMapper = accountMapper;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -57,6 +61,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
         accountDO.setPassword(password);
         accountDO.setSalt(salt);
         accountDO.setCreateTime(new Timestamp(System.currentTimeMillis()));
+        accountDO.setLastLoginTime(new Timestamp(System.currentTimeMillis()));
         save(accountDO);
 
         Account account = new Account();
@@ -69,6 +74,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
         AccountDO accountDO = new AccountDO();
         accountDO.setPhone(phone);
         accountDO.setCreateTime(new Timestamp(System.currentTimeMillis()));
+        accountDO.setLastLoginTime(new Timestamp(System.currentTimeMillis()));
         save(accountDO);
 
         Account account = new Account();
@@ -81,6 +87,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
         AccountDO accountDO = new AccountDO();
         accountDO.setDevice(deviceId);
         accountDO.setCreateTime(new Timestamp(System.currentTimeMillis()));
+        accountDO.setLastLoginTime(new Timestamp(System.currentTimeMillis()));
         save(accountDO);
 
         Account account = new Account();
@@ -174,7 +181,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
     @Override
     public boolean save(AccountDO accountDO) {
         if (accountMapper.insert(accountDO) != 1) {
-            throw ExceptionFactory.sysException("设置角色失败");
+            throw ExceptionFactory.sysException("保存失败");
         }
         return true;
     }

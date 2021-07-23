@@ -41,7 +41,7 @@ public class AccountServiceImplTest {
     public void initMock() {
         MockitoAnnotations.initMocks(this);
         Mockito.when(accountMapper.insert(Mockito.any())).thenReturn(1);
-        accountService = new AccountServiceImpl(validationCodeService, accountMapper);
+        accountService = new AccountServiceImpl(validationCodeService, accountMapper,jwtUtil);
 
         ReflectionTestUtils.setField(jwtUtil, "secret", "dGhpcyBpcyBhIGV4YW1wbGU=");
         ReflectionTestUtils.setField(accountService, "jwtUtil", jwtUtil);

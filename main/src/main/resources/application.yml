@@ -31,3 +31,5 @@ role:
       - /wechat/*
     admin:
       - /admin/*
+jwt:
+  secret: dGhpcyBpcyBhIGV4YW1wbGU=
