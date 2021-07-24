@@ -30,6 +30,7 @@ import java.util.Map;
  * @author jxx
  */
 @Service
+@RefreshScope
 @ConfigurationProperties(prefix = "role")
 public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> implements IAccountService {
 

@@ -9,10 +9,9 @@ import org.springframework.context.annotation.ComponentScan;
 /**
  * @author a1
  */
-@EnableDiscoveryClient
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.jxx.auth", "com.jxx.common"})
-@MapperScan("com.jxx.auth.mapper")
+@ComponentScan(basePackages = {"com.jxx.gate", "com.jxx.common"})
+@MapperScan("com.jxx.gate.mapper")
 public class Main {
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);
