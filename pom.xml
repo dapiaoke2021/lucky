@@ -13,6 +13,8 @@
         <module>common</module>
         <module>main</module>
         <module>gate</module>
+        <module>auth_adapter</module>
+        <module>lucky</module>
     </modules>
 
     <properties>
@@ -136,11 +138,6 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-spring-boot-starter</artifactId>
-            <version>2.0.7</version>
         </dependency>
     </dependencies>
 </project>

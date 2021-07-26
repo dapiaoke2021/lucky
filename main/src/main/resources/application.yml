@@ -48,3 +48,9 @@ management:
         include: '*'
   security:
     enabled: false
+secure:
+  ignore:
+    urls:
+      - "/actuator/**"
+      - "/auth/**"
+      - "/public/**"
