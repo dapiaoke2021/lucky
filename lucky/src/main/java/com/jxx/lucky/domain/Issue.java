@@ -48,6 +48,11 @@ public class Issue {
      */
     private IssueStateEnum state;
 
+    /**
+     * 总税收（开奖之后计算）
+     */
+    private Integer tax;
+
     public Issue() {
         this.state = IssueStateEnum.BETTING;
         this.bankerMap = new HashMap<>();
@@ -55,7 +60,7 @@ public class Issue {
         this.playerMap = new HashMap<>();
         this.topBetMap = new HashMap<>();
         this.betMap = new HashMap<>();
-        betTypeMap.keySet().forEach(betType -> {
+        GameConstant.betTypeMap.keySet().forEach(betType -> {
             this.topBetMap.put(betType, 0);
             this.betMap.put(betType, 0);
         });
@@ -74,6 +79,7 @@ public class Issue {
         Banker banker = new Banker();
         banker.setUserId(player.getId());
         banker.setTopBet(player.getMoney());
+        banker.setType(bankerType);
         bankerMap.put(bankerType, banker);
 
         updateTop(bankerType, banker);
@@ -85,27 +91,21 @@ public class Issue {
 
     public void open(Integer point) {
         List<BetType> hitBets = getHitBets(point);
-        playerMap.values().forEach(player -> player.open(hitBets));
+        int playerTotalTax = playerMap.values().stream().reduce(
+                0,
+                (sum, player) -> sum + player.open(hitBets),
+                Integer::sum
+        );
+        int bankerTotalTax = bankerMap.values().stream().reduce(
+                0,
+                (sum, banker) -> sum + banker.open(hitBets, betMap),
+                Integer::sum
+        );
+        this.tax = playerTotalTax + bankerTotalTax;
     }
 
-    static Map<BetTypeEnum, BetType> betTypeMap = new HashMap<BetTypeEnum, BetType>(){{
-        put(BetTypeEnum.BIG, new BetType(BetTypeEnum.BIG, point -> point.compareTo(4) > 0, BigDecimal.valueOf(2)));
-        put(BetTypeEnum.SMALL, new BetType(BetTypeEnum.SMALL, point -> point.compareTo(4) <= 0, BigDecimal.valueOf(2)));
-        put(BetTypeEnum.OOD, new BetType(BetTypeEnum.OOD, point -> point % 2 != 0, BigDecimal.valueOf(2)));
-        put(BetTypeEnum.EVEN, new BetType(BetTypeEnum.EVEN, point -> point % 2 == 0, BigDecimal.valueOf(2)));
-        put(BetTypeEnum.NUMBER_0, new BetType(BetTypeEnum.NUMBER_0, point -> point == 0, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_1, new BetType(BetTypeEnum.NUMBER_1, point -> point == 1, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_2, new BetType(BetTypeEnum.NUMBER_2, point -> point == 2, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_3, new BetType(BetTypeEnum.NUMBER_3, point -> point == 3, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_4, new BetType(BetTypeEnum.NUMBER_4, point -> point == 4, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_5, new BetType(BetTypeEnum.NUMBER_5, point -> point == 5, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_6, new BetType(BetTypeEnum.NUMBER_6, point -> point == 6, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_7, new BetType(BetTypeEnum.NUMBER_7, point -> point == 7, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_8, new BetType(BetTypeEnum.NUMBER_8, point -> point == 8, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_9, new BetType(BetTypeEnum.NUMBER_9, point -> point == 9, BigDecimal.valueOf(10)));
-    }};
     private List<BetType> getHitBets(Integer point) {
-        return betTypeMap.values().stream()
+        return GameConstant.betTypeMap.values().stream()
                 .filter(hitPre -> hitPre.getPredictor().apply(point))
                 .collect(Collectors.toList());
     }
@@ -159,7 +159,7 @@ public class Issue {
         betMap.put(betType, betMap.get(betType) + money);
 
         BankerTypeEnum bankerType = getBankTypeFromBetType(betType);
-        List<BetTypeEnum> relatedBetTypes = bankerBetTypeMap.get(bankerType);
+        List<BetTypeEnum> relatedBetTypes = GameConstant.bankerBetTypeMap.get(bankerType);
         relatedBetTypes.forEach(topBetType -> {
             Integer otherTotalBet = relatedBetTypes.stream()
                     .filter(relatedBetType -> !relatedBetType.equals(topBetType))
@@ -167,7 +167,10 @@ public class Issue {
             Banker banker = bankerMap.get(bankerType);
             // 最大可下注额 = (其他区域下注总额 + 庄家身上的钱)/(赔率-1) - 已下注额
             Integer maxBet = BigDecimal.valueOf(otherTotalBet + banker.getTopBet())
-                    .divide(betTypeMap.get(betType).getOdds().subtract(BigDecimal.ONE), BigDecimal.ROUND_FLOOR).intValue()
+                    .divide(
+                            GameConstant.betTypeMap.get(betType).getOdds().subtract(BigDecimal.ONE),
+                            BigDecimal.ROUND_FLOOR
+                    ).intValue()
                     - betMap.get(topBetType);
             topBetMap.put(topBetType, maxBet);
         });
@@ -179,27 +182,20 @@ public class Issue {
      * @param banker 庄家
      */
     private void updateTop(BankerTypeEnum bankerType, Banker banker) {
-        List<BetTypeEnum> betTypes = bankerBetTypeMap.get(bankerType);
+        List<BetTypeEnum> betTypes = GameConstant.bankerBetTypeMap.get(bankerType);
         betTypes.forEach(betType -> {
             topBetMap.put(
                     betType,
                     BigDecimal.valueOf(banker.getTopBet())
-                            .divide(betTypeMap.get(betType).getOdds().subtract(BigDecimal.ONE), BigDecimal.ROUND_FLOOR)
+                            .divide(
+                                    GameConstant.betTypeMap.get(betType).getOdds().subtract(BigDecimal.ONE),
+                                    BigDecimal.ROUND_FLOOR)
                             .intValue()
             );
         });
     }
 
-    static Map<BankerTypeEnum, List<BetTypeEnum>> bankerBetTypeMap = new HashMap<BankerTypeEnum, List<BetTypeEnum>>(){{
-        put(BankerTypeEnum.BIG_SMALL, Arrays.asList(BetTypeEnum.BIG, BetTypeEnum.SMALL));
-        put(BankerTypeEnum.OOD_EVEN, Arrays.asList(BetTypeEnum.EVEN, BetTypeEnum.OOD));
-        put(BankerTypeEnum.NUMBER, Arrays.asList(
-                BetTypeEnum.NUMBER_0, BetTypeEnum.NUMBER_1, BetTypeEnum.NUMBER_2,
-                BetTypeEnum.NUMBER_3, BetTypeEnum.NUMBER_4, BetTypeEnum.NUMBER_5,
-                BetTypeEnum.NUMBER_6, BetTypeEnum.NUMBER_7, BetTypeEnum.NUMBER_8,
-                BetTypeEnum.NUMBER_9
-        ));
-    }};
+
 
     /**
      * 通过押注类型获得庄家类型

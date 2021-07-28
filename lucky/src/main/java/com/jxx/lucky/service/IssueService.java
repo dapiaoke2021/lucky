@@ -1,5 +1,6 @@
 package com.jxx.lucky.service;
 
+import com.jxx.lucky.domain.BankerTypeEnum;
 import com.jxx.lucky.domain.BetTypeEnum;
 
 /**
@@ -24,8 +25,9 @@ public interface IssueService {
     /**
      * 上庄
      * @param playerId id
+     * @param bankerType
      */
-    void becomeBanker(Long playerId);
+    void becomeBanker(Long playerId, BankerTypeEnum bankerType);
 
     /**
      * 开奖

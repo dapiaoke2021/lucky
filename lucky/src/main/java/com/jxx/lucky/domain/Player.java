@@ -1,6 +1,5 @@
 package com.jxx.lucky.domain;
 
-import cn.hutool.core.math.Money;
 import com.alibaba.cola.exception.ExceptionFactory;
 import lombok.Data;
 
@@ -40,8 +39,8 @@ public class Player {
         return totalBet;
     }
 
-    public void open(List<BetType> hitBets) {
-        bonus = hitBets.stream().reduce(
+    public int open(List<BetType> hitBets) {
+        int totalWin = hitBets.stream().reduce(
                 0,
                 (sum, hitBet) -> {
                     Integer betMoney = bets.get(hitBet.getType());
@@ -49,17 +48,33 @@ public class Player {
                         return sum;
                     }
 
-                    // 赢钱 = 下注额 + 下注额 *（赔率-1）* (1 - 税收)
+                    // 赢钱 = 下注额 *（赔率-1）
                     // 最低下注额1元，所以取整没问题
-                    Integer winMoney = betMoney
-                            + BigDecimal.valueOf(betMoney).multiply(
-                                    hitBet.getOdds().subtract(BigDecimal.ONE))
-                            .multiply(BigDecimal.ONE.subtract(GameConstant.TAX))
-                            .intValue();
-
-                    return sum + winMoney;
+                    return sum + BigDecimal.valueOf(betMoney).multiply(hitBet.getOdds().subtract(BigDecimal.ONE)).intValue();
                 },
                 Integer::sum
         );
+        int totalTax = hitBets.stream().reduce(
+                0,
+                (sum, hitBet) -> {
+                    Integer betMoney = bets.get(hitBet.getType());
+                    if (betMoney == null) {
+                        return sum;
+                    }
+
+                    BigDecimal winMoney = BigDecimal.valueOf(betMoney).multiply(hitBet.getOdds().subtract(BigDecimal.ONE));
+                    return sum + winMoney.multiply(GameConstant.TAX).intValue();
+
+                },
+                Integer::sum
+        );
+
+        int totalWinBet = hitBets.stream().reduce(
+                0,
+                (sum, hitBet) -> sum + ((bets.get(hitBet.getType()) == null) ? 0 : bets.get(hitBet.getType())),
+                Integer::sum);
+
+        bonus = totalWin - totalTax + totalWinBet;
+        return totalTax;
     }
 }

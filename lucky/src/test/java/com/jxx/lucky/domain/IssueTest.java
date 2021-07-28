@@ -100,6 +100,10 @@ public class IssueTest {
         Assertions.assertEquals(player3.getMoney(), 100);
         Assertions.assertEquals(player4.getBonus(), 0);
         Assertions.assertEquals(player4.getMoney(), 900);
+
+        Assertions.assertEquals(issue.getBankerMap().get(BankerTypeEnum.OOD_EVEN).getResult(), -100);
+        Assertions.assertEquals(issue.getBankerMap().get(BankerTypeEnum.BIG_SMALL).getResult(), -5);
+        Assertions.assertEquals(issue.getBankerMap().get(BankerTypeEnum.NUMBER).getResult(), -805);
     }
 
     private void assertBecomeBanker(Player player, BankerTypeEnum bankerType, Integer...expectedTops) {

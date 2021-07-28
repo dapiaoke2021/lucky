@@ -6,14 +6,14 @@ import com.baomidou.mybatisplus.annotation.EnumValue;
  * @author a1
  */
 
-public enum IssueStateEnum {
-    // 下注阶段
-    BETTING(0),
-    // 结算阶段
-    SETTLE(1),
-    // 关闭
-    CLOSED(2);
-    IssueStateEnum(int state) {
+public enum BetStateEnum {
+    // 进行中
+    ONGOING(0),
+    // 已结算
+    SETTLED(1),
+    // 已撤销
+    REVOKE(2);
+    BetStateEnum(int state) {
         this.state = state;
     }
 
