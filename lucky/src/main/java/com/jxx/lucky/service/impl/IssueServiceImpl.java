@@ -10,7 +10,7 @@ import com.jxx.lucky.mapper.BetMapper;
 import com.jxx.lucky.mapper.IssueMapper;
 import com.jxx.lucky.service.IssueService;
 import com.jxx.user.vo.UserVO;
-import com.jxx.user.service.IUserService;
+import com.jxx.user.service.IUserServiceApi;
 import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class IssueServiceImpl implements IssueService {
     private Issue currentIssue;
 
     @Reference
-    IUserService userService;
+    IUserServiceApi userService;
 
     @Autowired
     BetMapper betMapper;

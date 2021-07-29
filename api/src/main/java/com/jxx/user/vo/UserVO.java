@@ -9,4 +9,5 @@ import lombok.Data;
 public class UserVO {
     private Long id;
     private Integer money;
+    private Long upper;
 }

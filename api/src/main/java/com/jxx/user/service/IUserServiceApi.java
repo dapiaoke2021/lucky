@@ -5,7 +5,7 @@ import com.jxx.user.vo.UserVO;
 /**
  * @author a1
  */
-public interface IUserService {
+public interface IUserServiceApi {
     /**
      * 获取用户信息
      * @param id 用户ID
