@@ -1,0 +1,43 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${MYSQL_URL}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+  profiles:
+    active: ${ENV}
+  redis:
+    host: ${REDIS_HOST}
+    password: ${REDIS_PASSWORD}
+mybatis:
+  mapper-locations: classpath:mapper/*Mapper.xml
+  type-aliases-package: com.jxx.dos
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+mybatis-plus:
+  type-enums-package: com.jxx.auth.enums
+sms:
+  tencent:
+    appId: ${TENCENT_SMS_APPID}
+    appKey: ${TENCENT_SMS_APPKEY}
+    apiId: ${TENCENT_APIID}
+    apiKey: ${TENCENT_APIKEY}
+    sign: ${TENCENT_SMS_SIGN}
+    templateId: ${TENCENT_SMS_TEMPLATEID}
+jwt:
+  secret: dGhpcyBpcyBhIGV4YW1wbGU=
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.http.server.reactive: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.ipc.netty: DEBUG
+
+#开启端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  security:
+    enabled: false

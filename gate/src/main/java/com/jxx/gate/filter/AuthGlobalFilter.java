@@ -3,10 +3,11 @@ package com.jxx.gate.filter;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.cola.dto.Response;
-import com.jxx.auth.dto.Account;
-import com.jxx.auth.service.IAccountService;
-import com.jxx.auth.utils.JwtUtil;
+import com.jxx.auth.service.IAuthApi;
+import com.jxx.auth.vo.AccountVO;
+import com.jxx.auth.vo.AuthCheckResultVO;
 import com.jxx.gate.config.IgnoreUrlsConfig;
+import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
@@ -30,14 +31,13 @@ import java.util.List;
  */
 @Component
 public class AuthGlobalFilter implements WebFilter {
-    @Autowired
-    JwtUtil jwtUtil;
+
+    @Reference
+    IAuthApi authApi;
 
     @Autowired
     private IgnoreUrlsConfig ignoreUrlsConfig;
 
-    @Autowired
-    IAccountService accountService;
 
     @Override
     public Mono<Void> filter(ServerWebExchange serverWebExchange, WebFilterChain webFilterChain) {
@@ -50,27 +50,33 @@ public class AuthGlobalFilter implements WebFilter {
                 return forbiddenResponse(serverWebExchange.getResponse(), false);
             }
         }
-        Account account = jwtUtil.parseToken(token);
+
+        AuthCheckResultVO authCheckResultVO = authApi.checkToken(token, url);
+        AccountVO accountVO = authCheckResultVO.getAccountVO();
+        if (accountVO == null) {
+            return forbiddenResponse(serverWebExchange.getResponse(), true);
+        }
+        if (!authCheckResultVO.isAuthority()) {
+            return forbiddenResponse(serverWebExchange.getResponse(), null);
+        }
         ServerHttpRequest request = serverWebExchange.getRequest().mutate()
-                .header("id", account.getId().toString())
-                .header("role", account.getRole().getName())
+                .header("id", accountVO.getId().toString())
+                .header("role", accountVO.getRoleName())
                 .build();
         serverWebExchange = serverWebExchange.mutate().request(request).build();
-        if (isWhite(url)) {
-            return webFilterChain.filter(serverWebExchange);
-        } else {
-            if(accountService.checkAuthority(account.getRole().getName(), url)) {
-                return webFilterChain.filter(serverWebExchange);
-            } else {
-                return forbiddenResponse(serverWebExchange.getResponse(), true);
-            }
-        }
+        return webFilterChain.filter(serverWebExchange);
     }
 
-    private Mono<Void> forbiddenResponse(ServerHttpResponse response, boolean relogin) {
+    private Mono<Void> forbiddenResponse(ServerHttpResponse response, Boolean relogin) {
         response.setStatusCode(HttpStatus.OK);
         response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        String body= JSONUtil.toJsonStr(Response.buildFailure("401", relogin ? "请重新登录" : "请登录"));
+        String body;
+        if (relogin != null) {
+            body= JSONUtil.toJsonStr(Response.buildFailure("401", relogin ? "请重新登录" : "请登录"));
+        } else {
+            body = JSONUtil.toJsonStr(Response.buildFailure("403", "没有访问权限"));
+        }
+
         DataBuffer buffer =  response.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8));
         return response.writeWith(Mono.just(buffer));
     }

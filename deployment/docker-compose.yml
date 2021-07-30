@@ -1,0 +1,30 @@
+version: "3"
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --server-id=1 --log-bin=/var/lib/mysql/mysql-bin.log --binlog_do_db=wk
+    privileged: true
+    ports:
+      - 3308:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: Jz123456 #设置root帐号密码
+      TZ: Asia/Shanghai
+    volumes:
+      - /home/mysql/data/db:/var/lib/mysql
+      - /home/mysql/data/conf:/etc/mysql/conf.d
+      - /home/logs/mysql:/var/log/mysql
+  redis:
+    image: redis
+    container_name: redis
+    privileged: true
+    command: redis-server --requirepass Jz123456
+    volumes:
+      - /home/redis:/data
+networks:
+  elk:
+    external: true
+    name: docker-elk_elk
+
+
+

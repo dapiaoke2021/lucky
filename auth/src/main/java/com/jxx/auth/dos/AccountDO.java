@@ -23,5 +23,5 @@ public class AccountDO implements Serializable {
     private String phone;
     private String password;
     private String salt;
-    private String roleName;
+    private String roleName = "user";
 }

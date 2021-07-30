@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author a1
@@ -95,6 +96,16 @@ public class IssueServiceImpl implements IssueService {
         currentIssue.open(point);
         saveIssue(currentIssue);
         currentIssue = new Issue();
+    }
+
+    @Override
+    public Map<BetTypeEnum, Integer> getTopBetMap() {
+        return currentIssue.getTopBetMap();
+    }
+
+    @Override
+    public Map<BetTypeEnum, Integer> getBetMap() {
+        return currentIssue.getBetMap();
     }
 
     @Transactional(rollbackFor = Exception.class)
