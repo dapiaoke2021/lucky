@@ -6,7 +6,7 @@ services:
     command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --server-id=1 --log-bin=/var/lib/mysql/mysql-bin.log --binlog_do_db=wk
     privileged: true
     ports:
-      - 3308:3306
+      - "3308:3306"
     environment:
       MYSQL_ROOT_PASSWORD: Jz123456 #设置root帐号密码
       TZ: Asia/Shanghai
@@ -21,6 +21,46 @@ services:
     command: redis-server --requirepass Jz123456
     volumes:
       - /home/redis:/data
+  user:
+    image: docker-registry:32410/user_adapter
+    container_name: user
+    privileged: true
+    environment:
+      MYSQL_URL: jdbc:mysql://mysql:3306/user?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
+    depends_on:
+      - mysql
+      - redis
+    env_file:
+      - lucky.env
+  auth:
+    image: docker-registry:32410/auth_adapter
+    container_name: auth
+    environment:
+      MYSQL_URL: jdbc:mysql://mysql:3306/auth?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
+    privileged: true
+    depends_on:
+      - mysql
+      - redis
+    env_file:
+      - lucky.env
+  gate:
+    image: docker-registry:32410/gate
+    container_name: gate
+    privileged: true
+    depends_on:
+      - auth
+    env_file:
+      - lucky.env
+  lucky:
+    image: docker-registry:32410/lucky_adapter
+    container_name: lucky
+    privileged: true
+    environment:
+      MYSQL_URL: jdbc:mysql://mysql:3306/lucky?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
+    depends_on:
+      - user
+    env_file:
+      - lucky.env
 networks:
   elk:
     external: true

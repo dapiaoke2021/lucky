@@ -11,7 +11,6 @@
     <modules>
         <module>auth</module>
         <module>common</module>
-        <module>main</module>
         <module>gate</module>
         <module>auth_adapter</module>
         <module>lucky</module>

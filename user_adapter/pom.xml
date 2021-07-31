@@ -52,6 +52,13 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>com.spotify</groupId>
@@ -88,5 +95,8 @@
                 </configuration>
             </plugin>
         </plugins>
+        ports:
+
+        - 3308:3306
     </build>
 </project>
