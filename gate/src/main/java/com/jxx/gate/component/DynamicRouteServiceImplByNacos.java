@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * @author a1
  */
-@Component
+//@Component
 @Slf4j
 public class DynamicRouteServiceImplByNacos {
     private final DynamicRouteServiceImpl dynamicRouteService;

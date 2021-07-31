@@ -6,9 +6,11 @@ import com.alibaba.cola.dto.Response;
 import com.jxx.auth.service.IAuthApi;
 import com.jxx.auth.vo.AccountVO;
 import com.jxx.auth.vo.AuthCheckResultVO;
+import com.jxx.gate.config.IgnoreUrls;
 import com.jxx.gate.config.IgnoreUrlsConfig;
 import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,19 +26,20 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * @author a1
  */
-@Component
+//@Component
 public class AuthGlobalFilter implements WebFilter {
 
     @Reference
     IAuthApi authApi;
 
     @Autowired
-    private IgnoreUrlsConfig ignoreUrlsConfig;
+    private IgnoreUrls ignoreUrlsConfig;
 
 
     @Override
@@ -83,7 +86,7 @@ public class AuthGlobalFilter implements WebFilter {
 
     private boolean isWhite(String url) {
         PathMatcher pathMatcher = new AntPathMatcher();
-        List<String> ignoreUrls = ignoreUrlsConfig.getUrls();
+        List<String> ignoreUrls = Arrays.asList(ignoreUrlsConfig.getUrls());
         for (String ignoreUrl : ignoreUrls) {
             if (pathMatcher.match(ignoreUrl, url)) {
                 return true;

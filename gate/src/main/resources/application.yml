@@ -1,5 +1,31 @@
-server.port: 8080
-
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          lowerCaseServiceId: true
+      routes:
+        - id: auth
+          uri: lb://auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - SwaggerHeaderFilter
+            - StripPrefix=1
+        - id: user
+          uri: lb://user
+          predicates:
+            - Path=/user/**
+          filters:
+            - SwaggerHeaderFilter
+            - StripPrefix=1
+        - id: lucky
+          uri: lb://lucky
+          predicates:
+            - Path=/lucky/**
+          filters:
+            - SwaggerHeaderFilter
+            - StripPrefix=1
 # 配置输出日志
 logging:
   level:
@@ -22,3 +48,9 @@ secure:
       - "/actuator/**"
       - "/auth/**"
       - "/public/**"
+      - "/doc.html"
+      - "/doc.html#/**"
+      - "/*.html"
+      - "/webjars/**"
+      - "/swagger-resources/**"
+      - "/*/*/api-docs"

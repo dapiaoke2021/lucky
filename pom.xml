@@ -29,8 +29,6 @@
         <spring-cloud.version>Hoxton.SR5</spring-cloud.version>
         <spring-boot.version>2.3.0.RELEASE</spring-boot.version>
         <hutool-version>5.3.5</hutool-version>
-        <swagger-ui.version>1.9.2</swagger-ui.version>
-        <swagger.version>2.9.2</swagger.version>
         <mybaitis-plus-version>3.4.1</mybaitis-plus-version>
         <cola.components.version>4.0.1</cola.components.version>
     </properties>
@@ -77,16 +75,6 @@
                 <groupId>com.jxx</groupId>
                 <artifactId>cloud</artifactId>
                 <version>1.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.xiaoymin</groupId>
-                <artifactId>swagger-bootstrap-ui</artifactId>
-                <version>${swagger-ui.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.springfox</groupId>
-                <artifactId>springfox-swagger2</artifactId>
-                <version>${swagger.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
