@@ -21,6 +21,17 @@ services:
     command: redis-server --requirepass Jz123456
     volumes:
       - /home/redis:/data
+  nacos:
+    image: nacos/nacos-server:latest
+    container_name: nacos-standalone
+    environment:
+      - MODE=standalone
+    volumes:
+      - /home/nacos/standalone-logs/:/home/nacos/logs
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+
   user:
     image: docker-registry:32410/user_adapter
     container_name: user
@@ -30,6 +41,7 @@ services:
     depends_on:
       - mysql
       - redis
+      - nacos
     env_file:
       - lucky.env
   auth:
@@ -41,6 +53,7 @@ services:
     depends_on:
       - mysql
       - redis
+      - nacos
     env_file:
       - lucky.env
   gate:
@@ -49,6 +62,7 @@ services:
     privileged: true
     depends_on:
       - auth
+      - nacos
     env_file:
       - lucky.env
   lucky:
@@ -59,6 +73,7 @@ services:
       MYSQL_URL: jdbc:mysql://mysql:3306/lucky?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
     depends_on:
       - user
+      - nacos
     env_file:
       - lucky.env
 networks:
