@@ -7,6 +7,7 @@ import com.jxx.auth.param.AuthorityByMd5Param;
 import com.jxx.auth.service.IAccountService;
 import com.jxx.auth.service.IThirdPartyService;
 import com.jxx.auth.service.IValidationCodeService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.List;
 /**
  * @author a1
  */
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -50,8 +52,9 @@ public class AuthController {
     }
 
     @GetMapping("/password")
-    public SingleResponse<String> authByPassword(String username, String password) {
-        return SingleResponse.of(accountService.authByPassword(username, password));
+    public SingleResponse<String> authByPassword(String username, String pwd) {
+        log.info("password收到请求 username={} pwd={}", username, pwd);
+        return SingleResponse.of(accountService.authByPassword(username, pwd));
     }
 
     @GetMapping("/device")

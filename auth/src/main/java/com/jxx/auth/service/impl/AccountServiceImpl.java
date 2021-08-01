@@ -103,7 +103,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
                 .eq(AccountDO::getUsername, username);
         AccountDO accountDO = accountMapper.selectOne(queryByUsernameWrapper);
         if (accountDO == null) {
-            throw ExceptionFactory.bizException("未找到账号");
+            throw ExceptionFactory.bizException("BIZ_ACCOUNT_NOT_FOUND","未找到账号");
         }
 
         if (!accountDO.getPassword().equals(password)) {
