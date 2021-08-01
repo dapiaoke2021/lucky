@@ -11,21 +11,18 @@ spring:
             - Path=/auth/**
           filters:
             - SwaggerHeaderFilter
-            - StripPrefix=1
         - id: user
           uri: lb://user
           predicates:
             - Path=/user/**
           filters:
             - SwaggerHeaderFilter
-            - StripPrefix=1
         - id: lucky
           uri: lb://lucky
           predicates:
             - Path=/lucky/**
           filters:
             - SwaggerHeaderFilter
-            - StripPrefix=1
 # 配置输出日志
 logging:
   level:

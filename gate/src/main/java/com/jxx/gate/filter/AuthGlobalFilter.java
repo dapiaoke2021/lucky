@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * @author a1
  */
-//@Component
+@Component
 public class AuthGlobalFilter implements WebFilter {
 
     @Reference
