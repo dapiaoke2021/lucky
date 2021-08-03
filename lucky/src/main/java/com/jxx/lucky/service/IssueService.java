@@ -1,10 +1,14 @@
 package com.jxx.lucky.service;
 
+import com.jxx.lucky.domain.Banker;
 import com.jxx.lucky.domain.BankerTypeEnum;
-import com.jxx.lucky.domain.Bet;
 import com.jxx.lucky.domain.BetTypeEnum;
+import com.jxx.lucky.domain.Player;
+import com.jxx.lucky.param.BetParam;
 
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author a1
@@ -13,10 +17,10 @@ public interface IssueService {
     /**
      * 下注
      * @param playerId 玩家id
-     * @param money 下注额
-     * @param type 押注区域
+     * @param bets
+     * @return
      */
-    void bet(Long playerId, Integer money, BetTypeEnum type);
+    String bet(Long playerId, List<BetParam> bets);
 
     /**
      * 撤销下注
@@ -28,9 +32,30 @@ public interface IssueService {
     /**
      * 上庄
      * @param playerId id
+     * @param bankerType 庄家类型
+     * @param money 上庄金额
+     */
+    void becomeBanker(Long playerId, BankerTypeEnum bankerType, Integer money);
+
+    /**
+     * 获取当前期庄家
+     */
+    Map<BankerTypeEnum, Banker> getCurrentBanker();
+
+    /**
+     * 获取等待中庄家
+     */
+    Map<BankerTypeEnum, ConcurrentLinkedQueue<Player>> getWaitBanker();
+
+
+    /**
+     * 下庄.
+     * 如果正在上庄，则到下一句开始，自动下庄，把上庄队列中第一个玩家作为庄家。
+     * 如果处于队列中，则将其从队列中移除。
+     * @param playerId 玩家ID
      * @param bankerType
      */
-    void becomeBanker(Long playerId, BankerTypeEnum bankerType);
+    void offBanker(Long playerId, BankerTypeEnum bankerType);
 
     /**
      * 开奖
@@ -49,4 +74,14 @@ public interface IssueService {
      * @return 下注上限映射表<下注类型，下注总额>
      */
     Map<BetTypeEnum, Integer> getBetMap();
+
+    /**
+     * 获取当前期号
+     */
+    String getCurrentIssueNo();
+
+    /**
+     * 停止当期投注
+     */
+    void closeBet();
 }

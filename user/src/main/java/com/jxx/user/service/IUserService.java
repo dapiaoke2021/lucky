@@ -27,4 +27,9 @@ public interface IUserService {
      * @param money 金额
      */
     void transferMoney(Long sourceId, Long targetId, Integer money);
+
+    /**
+     * 更新资产
+     */
+    void changeMoney(Long playerId, int amount);
 }

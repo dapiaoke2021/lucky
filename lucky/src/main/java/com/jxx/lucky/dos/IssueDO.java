@@ -15,7 +15,4 @@ public class IssueDO {
     private String issueNo;
     private Integer point;
     private IssueStateEnum state;
-    private Long smallBigBanker;
-    private Long oodEvenBanker;
-    private Long numberBanker;
 }

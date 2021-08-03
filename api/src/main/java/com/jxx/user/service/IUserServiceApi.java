@@ -12,4 +12,10 @@ public interface IUserServiceApi {
      * @return 用户信息
      */
     UserVO getById(Long id);
+
+
+    /**
+     * 获取机器人
+     */
+    UserVO getRobot(Integer money);
 }

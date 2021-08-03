@@ -9,4 +9,5 @@ import lombok.Data;
 public class Bet {
     private Integer money;
     private BetTypeEnum betType;
+    private String betNo;
 }

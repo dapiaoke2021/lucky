@@ -1,12 +1,14 @@
 package com.jxx.lucky.domain;
 
 import com.alibaba.cola.exception.ExceptionFactory;
+import com.jxx.lucky.param.BetParam;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author a1
@@ -23,9 +25,6 @@ public class Player {
     }
 
     public void bet(Integer money, BetTypeEnum type){
-        if (this.money.compareTo(money) < 0) {
-            throw ExceptionFactory.bizException("S_PLAYER_NOT_ENOUGH_GOLD", "金额不足");
-        }
         this.money -= money;
         bets.merge(type, money, Integer::sum);
     }
@@ -76,5 +75,21 @@ public class Player {
 
         bonus = totalWin - totalTax + totalWinBet;
         return totalTax;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Player player = (Player) o;
+        return id.equals(player.id);
+    }
+
+    public boolean check(List<BetParam> bets) {
+        return bets.stream().reduce(
+                0,
+                (sum, betParam) -> sum + betParam.getAmount(),
+                Integer::sum
+        ).compareTo(money) <= 0;
     }
 }

@@ -24,9 +24,6 @@ public class UserServiceImpl implements IUserService {
         this.userConfig = userConfig;
     }
 
-
-
-
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void setUpper(Long id, Long upperId) {
@@ -66,5 +63,13 @@ public class UserServiceImpl implements IUserService {
                 .setSql("money = money + " + money.toString());
         userMapper.update(null, sourceUpdateWrapper);
         userMapper.update(null, targetUpdateWrapper);
+    }
+
+    @Override
+    public void changeMoney(Long playerId, int amount) {
+        UpdateWrapper<UserDO> userDOUpdateWrapper = new UpdateWrapper<>();
+        userDOUpdateWrapper.lambda()
+                .setSql("money = money + " + amount)
+                .eq(UserDO::getId, playerId);
     }
 }

@@ -42,4 +42,10 @@ public class GameConstant {
                 BetTypeEnum.NUMBER_9
         ));
     }};
+
+    public static Map<BankerTypeEnum, String> bankerTypeNameMap = new HashMap<BankerTypeEnum, String>() {{
+        put(BankerTypeEnum.NUMBER, "扫雷");
+        put(BankerTypeEnum.BIG_SMALL, "大小");
+        put(BankerTypeEnum.OOD_EVEN, "单双");
+    }};
 }

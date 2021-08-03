@@ -1,13 +1,15 @@
 package com.jxx.lucky.domain;
 
 import com.alibaba.cola.exception.BizException;
-import net.bytebuddy.implementation.bytecode.Throw;
+import com.jxx.lucky.param.BetParam;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 
 @ExtendWith(SpringExtension.class)
@@ -58,40 +60,32 @@ public class IssueTest {
         Player player3 = new Player();
         player3.setMoney(500);
         Throwable throwable2 = Assertions.assertThrows(BizException.class, () -> {
-            issue.bet(player3, 501, BetTypeEnum.SMALL);
+            issue.bet(player3, Collections.singletonList(new BetParam(BetTypeEnum.SMALL, 501)));
         });
         Assertions.assertEquals(throwable2.getMessage(), "金额不足");
 
         Throwable throwable3 = Assertions.assertThrows(BizException.class, () -> {
-            issue.bet(player3, 20000, BetTypeEnum.SMALL);
+            issue.bet(player2, Collections.singletonList(new BetParam(BetTypeEnum.SMALL, 20000)));
         });
-        Assertions.assertEquals(throwable3.getMessage(), "庄家额度不足");
+        Assertions.assertEquals(throwable3.getMessage(), "大小庄家额度不足");
 
-        issue.bet(player3, 100, BetTypeEnum.SMALL);
-        assertTopMap(topBetMap,10100, 9900,
-                20000, 20000,
-                11111, 11111, 11111, 11111, 11111, 11111, 11111, 11111, 11111, 11111  );
-
-        issue.bet(player3, 100, BetTypeEnum.EVEN);
-        assertTopMap(topBetMap,10100, 9900,
-                19900, 20100,
-                11111, 11111, 11111, 11111, 11111, 11111, 11111, 11111, 11111, 11111  );
-
-        issue.bet(player3, 100, BetTypeEnum.NUMBER_0);
-        assertTopMap(topBetMap,10100, 9900,
-                19900, 20100,
-                11011, 11122, 11122, 11122, 11122, 11122, 11122, 11122, 11122, 11122  );
-
-        issue.bet(player3, 100, BetTypeEnum.NUMBER_1);
-        assertTopMap(topBetMap,10100, 9900,
+        issue.bet(
+                player3,
+                Arrays.asList(
+                        new BetParam(BetTypeEnum.SMALL, 100),
+                        new BetParam(BetTypeEnum.NUMBER_0, 100),
+                        new BetParam(BetTypeEnum.NUMBER_1, 100),
+                        new BetParam(BetTypeEnum.EVEN, 100))
+        );
+        assertTopMap(issue.getTopBetMap(),10100, 9900,
                 19900, 20100,
                 11022, 11022, 11133, 11133, 11133, 11133, 11133, 11133, 11133, 11133  );
 
         Player player4 = new Player();
         player4.setId(4L);
         player4.setMoney(1000);
-        issue.bet(player4, 100, BetTypeEnum.BIG);
-        assertTopMap(topBetMap,10000, 10000,
+        issue.bet(player4, Collections.singletonList(new BetParam(BetTypeEnum.BIG, 100)));
+        assertTopMap(issue.getTopBetMap(),10000, 10000,
                 19900, 20100,
                 11022, 11022, 11133, 11133, 11133, 11133, 11133, 11133, 11133, 11133  );
 

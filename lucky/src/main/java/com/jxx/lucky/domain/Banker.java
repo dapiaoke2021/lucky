@@ -29,10 +29,9 @@ public class Banker {
                                 betTypeEnum -> betType.getType().equals(betTypeEnum)))
                 .reduce(
                         0,
-                        (sum, betType) -> sum
-                                + BigDecimal.valueOf(betMap.get(betType.getType()))
-                                .multiply(betType.getOdds().subtract(BigDecimal.ONE)).intValue(),
-                        Integer::sum );
+                        (sum, betType) -> sum + BigDecimal.valueOf(betMap.get(betType.getType()))
+                                    .multiply(betType.getOdds().subtract(BigDecimal.ONE)).intValue(),
+                        Integer::sum);
 
         int totalWin = GameConstant.bankerBetTypeMap.get(type).stream()
                 .filter(betTypeEnum -> hitBets.stream().noneMatch(hitBet -> hitBet.getType().equals(betTypeEnum)))

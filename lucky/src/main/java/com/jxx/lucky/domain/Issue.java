@@ -1,10 +1,13 @@
 package com.jxx.lucky.domain;
 
 import com.alibaba.cola.exception.ExceptionFactory;
+import com.jxx.lucky.param.BetParam;
 import lombok.Data;
+import lombok.Getter;
 import lombok.Synchronized;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,6 +24,7 @@ public class Issue {
     /**
      * 开奖点数
      */
+    @Getter
     private Integer point;
 
     /**
@@ -90,6 +94,7 @@ public class Issue {
     }
 
     public void open(Integer point) {
+        this.point = point;
         List<BetType> hitBets = getHitBets(point);
         int playerTotalTax = playerMap.values().stream().reduce(
                 0,
@@ -104,30 +109,53 @@ public class Issue {
         this.tax = playerTotalTax + bankerTotalTax;
     }
 
-    private List<BetType> getHitBets(Integer point) {
+    public List<BetType> getHitBets(Integer point) {
         return GameConstant.betTypeMap.values().stream()
                 .filter(hitPre -> hitPre.getPredictor().apply(point))
                 .collect(Collectors.toList());
     }
 
     @Synchronized
-    public void bet(Player player, Integer money, BetTypeEnum type) {
+    public void bet(Player player, List<BetParam> bets) {
         if (!state.equals(IssueStateEnum.BETTING)) {
             throw ExceptionFactory.bizException("S_ISSUE_OUT_BET_TIME", "下注时间已过");
         }
 
-        BankerTypeEnum bankerType = getBankTypeFromBetType(type);
-        if (bankerMap.get(bankerType) == null) {
-            throw ExceptionFactory.bizException("S_ISSUE_NO_BANKER", "没有庄家，不能下注");
+        // 检查玩家金额
+        if(!player.check(bets)) {
+            throw ExceptionFactory.bizException("S_PLAYER_NOT_ENOUGH_GOLD", "金额不足");
         }
 
-        if (!checkTop(type, money)) {
-            throw ExceptionFactory.bizException("S_ISSUE_NOT_ENOUGH_TOP_BET", "庄家额度不足");
+        // 检查庄家是否存在
+        for (BetParam betParam : bets) {
+            BankerTypeEnum bankerType = getBankTypeFromBetType(betParam.getBetType());
+            if(bankerMap.get(bankerType) == null) {
+                throw ExceptionFactory.bizException(
+                        "S_ISSUE_NO_BANKER",
+                        GameConstant.bankerTypeNameMap.get(bankerType) + "没有庄家，不能下注");
+            }
+        }
+
+        // 检查庄家额度
+        HashMap<BetTypeEnum, Integer> betMapTmp = new HashMap<>(betMap);
+        bets.forEach(betParam -> {
+            betMapTmp.merge(betParam.getBetType(), betParam.getAmount(), Integer::sum);
+        });
+        Map<BetTypeEnum, Integer> topBet = getTop(betMapTmp);
+        for (BetParam betParam : bets) {
+            if (topBet.get(betParam.getBetType()).compareTo(betParam.getAmount()) < 0) {
+                throw ExceptionFactory.bizException(
+                        "S_ISSUE_NOT_ENOUGH_TOP_BET",
+                        GameConstant.bankerTypeNameMap.get(getBankTypeFromBetType(betParam.getBetType())) + "庄家额度不足");
+            }
         }
 
         playerMap.putIfAbsent(player.getId(), player);
-        player.bet(money, type);
-        updateTop(type, money);
+        bets.forEach(betParam -> {
+            player.bet(betParam.getAmount(), betParam.getBetType());
+        });
+        this.betMap = betMapTmp;
+        this.topBetMap = topBet;
     }
 
     @Synchronized
@@ -157,23 +185,33 @@ public class Issue {
      */
     private void updateTop(BetTypeEnum betType, Integer money) {
         betMap.put(betType, betMap.get(betType) + money);
+        topBetMap = getTop(betMap);
+    }
 
-        BankerTypeEnum bankerType = getBankTypeFromBetType(betType);
-        List<BetTypeEnum> relatedBetTypes = GameConstant.bankerBetTypeMap.get(bankerType);
-        relatedBetTypes.forEach(topBetType -> {
-            Integer otherTotalBet = relatedBetTypes.stream()
-                    .filter(relatedBetType -> !relatedBetType.equals(topBetType))
-                    .reduce(0, (sum, otherBetType) -> sum + betMap.get(otherBetType), Integer::sum);
-            Banker banker = bankerMap.get(bankerType);
-            // 最大可下注额 = (其他区域下注总额 + 庄家身上的钱)/(赔率-1) - 已下注额
-            Integer maxBet = BigDecimal.valueOf(otherTotalBet + banker.getTopBet())
-                    .divide(
-                            GameConstant.betTypeMap.get(betType).getOdds().subtract(BigDecimal.ONE),
-                            BigDecimal.ROUND_FLOOR
-                    ).intValue()
-                    - betMap.get(topBetType);
-            topBetMap.put(topBetType, maxBet);
+    private Map<BetTypeEnum, Integer> getTop(Map<BetTypeEnum, Integer> betMap) {
+        Map<BetTypeEnum, Integer> topBetMap = new HashMap<>();
+        betMap.forEach((betType, amount) -> {
+            BankerTypeEnum bankerType = getBankTypeFromBetType(betType);
+            List<BetTypeEnum> relatedBetTypes = GameConstant.bankerBetTypeMap.get(bankerType);
+            relatedBetTypes.forEach(topBetType -> {
+                Integer otherTotalBet = relatedBetTypes.stream()
+                        .filter(relatedBetType -> !relatedBetType.equals(topBetType))
+                        .reduce(0, (sum, otherBetType) -> sum + betMap.get(otherBetType), Integer::sum);
+                Banker banker = bankerMap.get(bankerType);
+                if (banker == null) {
+                    return;
+                }
+                // 最大可下注额 = (其他区域下注总额 + 庄家身上的钱)/(赔率-1) - 已下注额
+                Integer maxBet = BigDecimal.valueOf(otherTotalBet + banker.getTopBet())
+                        .divide(
+                                GameConstant.betTypeMap.get(betType).getOdds().subtract(BigDecimal.ONE),
+                                RoundingMode.FLOOR
+                        ).intValue()
+                        - betMap.get(topBetType);
+                topBetMap.put(topBetType, maxBet);
+            });
         });
+        return topBetMap;
     }
 
     /**
