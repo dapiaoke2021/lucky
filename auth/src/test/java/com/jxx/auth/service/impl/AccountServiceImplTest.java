@@ -1,6 +1,7 @@
 package com.jxx.auth.service.impl;
 
 import com.alibaba.cola.exception.BizException;
+import com.jxx.auth.component.AuthEventSource;
 import com.jxx.auth.dos.AccountDO;
 import com.jxx.auth.dto.Account;
 import com.jxx.auth.mapper.AccountMapper;
@@ -35,13 +36,16 @@ public class AccountServiceImplTest {
 
     IAccountService accountService;
 
+    @Mock
+    AuthEventSource authEventSource;
+
     JwtUtil jwtUtil = new JwtUtil();
 
     @BeforeEach
     public void initMock() {
         MockitoAnnotations.initMocks(this);
         Mockito.when(accountMapper.insert(Mockito.any())).thenReturn(1);
-        accountService = new AccountServiceImpl(validationCodeService, accountMapper,jwtUtil);
+        accountService = new AccountServiceImpl(validationCodeService, accountMapper,jwtUtil, authEventSource);
 
         ReflectionTestUtils.setField(jwtUtil, "secret", "dGhpcyBpcyBhIGV4YW1wbGU=");
         ReflectionTestUtils.setField(accountService, "jwtUtil", jwtUtil);

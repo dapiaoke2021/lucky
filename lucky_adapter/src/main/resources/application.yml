@@ -11,8 +11,8 @@ spring:
     password: ${REDIS_PASSWORD}
 mybatis:
   mapper-locations: classpath:mapper/*Mapper.xml
-  type-aliases-package: com.jxx.user.dos
+  type-aliases-package: com.jxx.lucky.dos
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 mybatis-plus:
-  type-enums-package: com.jxx.user.enums*
+  type-enums-package: com.jxx.lucky*

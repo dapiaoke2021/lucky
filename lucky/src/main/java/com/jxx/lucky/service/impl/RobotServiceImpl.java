@@ -25,16 +25,16 @@ public class RobotServiceImpl implements RobotService {
     @Reference
     IUserServiceApi userService;
 
-    @Value("${lucky.robot-min-money}")
+    @Value("${robot-min-money}")
     private Integer robotMinMoney;
 
-    @Value("${lucky.robot-max-money}")
+    @Value("${robot-max-money}")
     private Integer robotMaxMoney;
 
-    @Value("${lucky.min-ongoing-issue}")
+    @Value("${min-ongoing-issue}")
     private Integer minOngoingIssue;
 
-    @Value("${lucky.max-ongoing-issue}")
+    @Value("${max-ongoing-issue}")
     private Integer maxOngoingIssue;
 
     private Map<Long, Robot> inGameRobotMap;

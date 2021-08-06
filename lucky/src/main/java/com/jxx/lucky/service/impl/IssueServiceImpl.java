@@ -2,7 +2,6 @@ package com.jxx.lucky.service.impl;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.cola.exception.ExceptionFactory;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.jxx.lucky.domain.*;
 import com.jxx.lucky.dos.BankerRecordDO;
@@ -25,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -37,7 +35,7 @@ public class IssueServiceImpl implements IssueService {
 
     private Issue currentIssue;
 
-    private RobotService robotService;
+    private final RobotService robotService;
 
     @Reference
     IUserServiceApi userService;
@@ -50,7 +48,7 @@ public class IssueServiceImpl implements IssueService {
 
     List<Banker> offBankers;
 
-    @Value("${lucky.banker-min-money}")
+    @Value("${banker-min-money}")
     Integer bankerMinMoney;
 
     //todo: 事件：上庄，下庄，下注，结算。使用spring cloud标准
@@ -66,12 +64,19 @@ public class IssueServiceImpl implements IssueService {
         this.robotService = robotService;
         this.offBankers = new ArrayList<>();
 
-        currentIssue = new Issue();
-        currentIssue.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
         bankerQueueMap = new ConcurrentHashMap<>();
         bankerQueueMap.put(BankerTypeEnum.BIG_SMALL, new ConcurrentLinkedQueue<>());
         bankerQueueMap.put(BankerTypeEnum.OOD_EVEN, new ConcurrentLinkedQueue<>());
         bankerQueueMap.put(BankerTypeEnum.NUMBER, new ConcurrentLinkedQueue<>());
+
+        currentIssue = new Issue();
+        currentIssue.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
+        if(issueMapper.selectById(currentIssue.getIssueNo()) == null) {
+            IssueDO issueDO = new IssueDO();
+            issueDO.setIssueNo(currentIssue.getIssueNo());
+            issueDO.setState(IssueStateEnum.BETTING);
+            issueMapper.insert(issueDO);
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -190,7 +195,7 @@ public class IssueServiceImpl implements IssueService {
 
     private void newIssue() {
         Issue nextIssue = new Issue();
-        nextIssue.setIssueNo(DateUtil.format(DateUtil.date(), "yyyyMMddHHmm"));
+        nextIssue.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
 
         // 庄家处理
         Map<BankerTypeEnum, Banker> currentBankerMap = currentIssue.getBankerMap();
@@ -220,7 +225,7 @@ public class IssueServiceImpl implements IssueService {
         currentIssue = nextIssue;
 
         IssueDO issueDO = new IssueDO();
-        issueDO.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
+        issueDO.setIssueNo(nextIssue.getIssueNo());
         issueDO.setState(IssueStateEnum.BETTING);
         issueMapper.insert(issueDO);
     }
@@ -244,6 +249,7 @@ public class IssueServiceImpl implements IssueService {
     public void closeBet() {
         currentIssue.setState(IssueStateEnum.SETTLE);
     }
+
 
     @Transactional(rollbackFor = Exception.class)
     protected void saveIssue(Issue currentIssue) {

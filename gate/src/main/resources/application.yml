@@ -17,11 +17,12 @@ spring:
             - Path=/user/**
           filters:
             - SwaggerHeaderFilter
-        - id: lucky
-          uri: lb://lucky
+        - id: lucky-eth
+          uri: lb://lucky-eth
           predicates:
-            - Path=/lucky/**
+            - Path=/eth/lucky/**
           filters:
+            - StripPrefix=1
             - SwaggerHeaderFilter
 # 配置输出日志
 logging:
@@ -50,4 +51,9 @@ secure:
       - "/*.html"
       - "/webjars/**"
       - "/swagger-resources/**"
-      - "/*/*/api-docs"
+      - "/**/api-docs"
+role:
+  authority:
+    user:
+      - "/*/lucky/**"
+      - "/user/**"

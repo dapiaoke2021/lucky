@@ -1,18 +1,28 @@
-package com.jxx.common.service.impl;
+package com.jxx.lucky.service;
 
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.jxx.lucky.service.impl.BtcUsdtPointGenerator;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+@Slf4j
 @ExtendWith(SpringExtension.class)
 public class BtcUsdtPointGeneratorTest {
 
     @Test
     public void testGetPoint() {
         BtcUsdtPointGenerator btcUsdtPointGenerator = new BtcUsdtPointGenerator();
-        Integer point = btcUsdtPointGenerator.getPoint("08032128");
+        Integer point = btcUsdtPointGenerator.getPoint("08052112");
         Assertions.assertEquals(4, point);
     }
+
 }

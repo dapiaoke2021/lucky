@@ -65,12 +65,25 @@ services:
       - nacos
     env_file:
       - lucky.env
-  lucky:
+  lucky-eth:
     image: docker-registry:32410/lucky_adapter
-    container_name: lucky
+    container_name: lucky-eth
     privileged: true
     environment:
       MYSQL_URL: jdbc:mysql://mysql:3306/lucky?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
+      LUCKY_TYPE: eth
+    depends_on:
+      - user
+      - nacos
+    env_file:
+      - lucky.env
+  lucky-btc:
+    image: docker-registry:32410/lucky_adapter
+    container_name: lucky-btc
+    privileged: true
+    environment:
+      MYSQL_URL: jdbc:mysql://mysql:3306/lucky?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
+      LUCKY_TYPE: btc
     depends_on:
       - user
       - nacos

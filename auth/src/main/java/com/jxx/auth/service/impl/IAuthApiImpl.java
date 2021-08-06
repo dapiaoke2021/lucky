@@ -6,10 +6,12 @@ import com.jxx.auth.service.IAuthApi;
 import com.jxx.auth.utils.JwtUtil;
 import com.jxx.auth.vo.AccountVO;
 import com.jxx.auth.vo.AuthCheckResultVO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @Service
 public class IAuthApiImpl implements IAuthApi {
@@ -32,6 +34,7 @@ public class IAuthApiImpl implements IAuthApi {
             authCheckResultVO.setAuthority(false);
             return authCheckResultVO;
         }
+        log.debug("account = {} token ={}", account, token);
         authCheckResultVO.setAuthority(accountService.checkAuthority(account.getRole().getName(), url));
         AccountVO accountVO = new AccountVO();
         accountVO.setId(account.getId());

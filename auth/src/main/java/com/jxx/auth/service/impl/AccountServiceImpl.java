@@ -4,6 +4,7 @@ import com.alibaba.cola.exception.ExceptionFactory;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
+import com.jxx.auth.component.AuthEventSource;
 import com.jxx.auth.dos.AccountDO;
 import com.jxx.auth.dto.Account;
 import com.jxx.auth.dto.Role;
@@ -11,6 +12,7 @@ import com.jxx.auth.mapper.AccountMapper;
 import com.jxx.auth.service.IAccountService;
 import com.jxx.auth.service.IValidationCodeService;
 import com.jxx.auth.utils.JwtUtil;
+import com.jxx.auth.vo.AccountVO;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.BeanUtils;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
@@ -42,17 +45,21 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
     JwtUtil jwtUtil;
     AntPathMatcher antPathMatcher;
     AccountMapper accountMapper;
+    AuthEventSource authEventSource;
 
     public AccountServiceImpl() {
         antPathMatcher = new AntPathMatcher();
     }
 
     @Autowired
-    public AccountServiceImpl(IValidationCodeService validationCodeService, AccountMapper accountMapper, JwtUtil jwtUtil) {
+    public AccountServiceImpl(
+            IValidationCodeService validationCodeService, AccountMapper accountMapper,
+            JwtUtil jwtUtil, AuthEventSource authEventSource) {
         this();
         this.validationCodeService = validationCodeService;
         this.accountMapper = accountMapper;
         this.jwtUtil = jwtUtil;
+        this.authEventSource = authEventSource;
     }
 
     @Override
@@ -184,12 +191,15 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
         if (accountMapper.insert(accountDO) != 1) {
             throw ExceptionFactory.sysException("保存失败");
         }
+
+        AccountVO accountVO = new AccountVO();
+        accountVO.setId(accountDO.getId());
+        accountVO.setRoleName(accountDO.getRoleName() == null ? "user" : accountDO.getRoleName());
+        authEventSource.authOutput().send(MessageBuilder.withPayload(accountVO).build());
         return true;
     }
 
     private Role createRoleByName(String roleName) {
-        Role role = new Role(roleName);
-        role.setUrls(authority.get(roleName));
-        return role;
+        return new Role(roleName);
     }
 }

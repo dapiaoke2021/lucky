@@ -1,18 +1,18 @@
-package com.jxx.common.service.impl;
+package com.jxx.lucky.service.impl;
 
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
-import com.jxx.common.service.IPointGenerator;
+import com.jxx.lucky.service.IPointGenerator;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.Service;
 
 import java.util.HashMap;
 
-@Service
+@Slf4j
 public class BtcUsdtPointGenerator implements IPointGenerator {
 
     @Override
@@ -27,6 +27,12 @@ public class BtcUsdtPointGenerator implements IPointGenerator {
         }});
         JSONArray array = JSON.parseArray(response);
         JSONArray last = array.getJSONArray(array.size() - 1);
+        log.debug("{}期，请求startTime={} endTime={}, last={}",
+                no,
+                DateUtil.offsetMinute(date, -1).getTime(),
+                DateUtil.offsetSecond(date, 1).getTime(),
+                last
+        );
         String data = (String) last.get(4);
         return Integer.parseInt(String.valueOf(data.charAt(data.length() - 1)));
     }

@@ -7,6 +7,7 @@ import com.alibaba.cola.dto.SingleResponse;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.jxx.common.aop.UserId;
 import com.jxx.lucky.domain.BankerTypeEnum;
 import com.jxx.lucky.domain.BetTypeEnum;
 import com.jxx.lucky.dos.BetRecordDO;
@@ -52,6 +53,7 @@ public class LuckyController {
         return MultiResponse.of(bets);
     }
 
+    @UserId
     @ApiOperation("下注")
     @PostMapping
     public SingleResponse<String> bet(Long playerId, @RequestBody List<BetParam> bets) {
@@ -59,6 +61,7 @@ public class LuckyController {
         return SingleResponse.of(betNo);
     }
 
+    @UserId
     @ApiOperation("上庄")
     @PostMapping("/banker")
     public Response becomeBanker(Long playerId, BankerTypeEnum bankerType, Integer money) {
@@ -66,6 +69,7 @@ public class LuckyController {
         return Response.buildSuccess();
     }
 
+    @UserId
     @ApiOperation("下庄")
     @DeleteMapping("/banker")
     public Response offBanker(Long playerId, BankerTypeEnum bankerType) {
@@ -82,6 +86,7 @@ public class LuckyController {
         return SingleResponse.of(issueBankerVO);
     }
 
+    @UserId
     @ApiOperation("获取下注记录")
     @GetMapping("/bet")
     public PageResponse<BetVO> listBetRecord(Long playerId, Page<BetRecordDO> page) {

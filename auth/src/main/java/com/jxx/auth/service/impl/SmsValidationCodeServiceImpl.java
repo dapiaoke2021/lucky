@@ -14,17 +14,19 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author a1
  */
-@Service
-public class ValidationCodeServiceImpl implements IValidationCodeService {
+public class SmsValidationCodeServiceImpl implements IValidationCodeService {
 
-    @Autowired
     ISmsService smsService;
-
-    @Autowired
     StringRedisTemplate redisTemplate;
 
     @Value("${sms.tencent.templateId}")
     private String templateId;
+
+    @Autowired
+    public SmsValidationCodeServiceImpl(ISmsService smsService, StringRedisTemplate redisTemplate) {
+        this.smsService = smsService;
+        this.redisTemplate = redisTemplate;
+    }
 
     @Override
     public void generateCode(String phone) {

@@ -5,6 +5,7 @@ import com.tencentcloudapi.sms.v20190711.SmsClient;
 import com.tencentcloudapi.sms.v20190711.models.SendSmsRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import com.jxx.common.service.ISmsService;
 
@@ -12,7 +13,6 @@ import com.jxx.common.service.ISmsService;
  * @author a1
  */
 @Slf4j
-@Service
 public class TencentSmsServiceImpl implements ISmsService {
 
     @Value("${sms.tencent.apiId}")

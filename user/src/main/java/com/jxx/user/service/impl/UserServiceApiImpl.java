@@ -11,16 +11,18 @@ import org.apache.dubbo.config.annotation.Service;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @Service
+@RefreshScope
 public class UserServiceApiImpl implements IUserServiceApi {
-    @Value("${lucky.robot-min-id}")
+    @Value("${robot-min-id}")
     private Long robotMinId;
 
-    @Value("${lucky.robot-max-id}")
+    @Value("${robot-max-id}")
     private Long robotMaxId;
 
     @Autowired

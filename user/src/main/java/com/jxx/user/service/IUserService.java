@@ -1,6 +1,7 @@
 package com.jxx.user.service;
 
-import java.math.BigDecimal;
+import com.jxx.user.enums.MoneyChangeTypeEnum;
+import com.jxx.user.vo.UserVO;
 
 /**
  * @author a1
@@ -31,5 +32,16 @@ public interface IUserService {
     /**
      * 更新资产
      */
-    void changeMoney(Long playerId, int amount);
+    void changeMoney(Long id, int amount, MoneyChangeTypeEnum moneyChangeType);
+
+
+    /**
+     * 创建用户
+     */
+    void createUser(Long id);
+
+    /**
+     * 获取用户信息
+     */
+    UserVO getUser(Long id);
 }

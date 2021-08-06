@@ -6,6 +6,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -13,6 +14,7 @@ import org.springframework.util.StringUtils;
 /**
  * @author a1
  */
+@Slf4j
 @Component
 public class JwtUtil {
 
@@ -56,6 +58,7 @@ public class JwtUtil {
      * @return the JWT token
      */
     public String generateToken(Account u) {
+        log.debug("generateToken.account={}", u);
         Claims claims = Jwts.claims().setSubject(u.getUsername());
         claims.put("userId", u.getId() + "");
         if (u.getRole() != null) {
