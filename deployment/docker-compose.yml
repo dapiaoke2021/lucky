@@ -26,6 +26,12 @@ services:
     container_name: nacos-standalone
     environment:
       - MODE=standalone
+      - SPRING_DATASOURCE_PLATFORM=mysql
+      - MYSQL_SERVICE_HOST=mysql
+      - MYSQL_SERVICE_DB_NAME=nacos
+      - MYSQL_SERVICE_USER=root
+      - MYSQL_SERVICE_PASSWORD=Jz123456
+      - MYSQL_SERVICE_DB_PARAM=characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false
     volumes:
       - /home/nacos/standalone-logs/:/home/nacos/logs
     ports:
@@ -44,6 +50,10 @@ services:
       - nacos
     env_file:
       - lucky.env
+    networks:
+      - mq
+      - elk
+      - default
   auth:
     image: docker-registry:32410/auth_adapter
     container_name: auth
@@ -56,43 +66,63 @@ services:
       - nacos
     env_file:
       - lucky.env
+    networks:
+      - elk
+      - mq
+      - default
   gate:
     image: docker-registry:32410/gate
     container_name: gate
     privileged: true
+    ports:
+      - "80:8080"
     depends_on:
       - auth
       - nacos
     env_file:
       - lucky.env
+    networks:
+      - elk
+      - default
   lucky-eth:
     image: docker-registry:32410/lucky_adapter
     container_name: lucky-eth
     privileged: true
     environment:
       MYSQL_URL: jdbc:mysql://mysql:3306/lucky?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
-      LUCKY_TYPE: eth
+      POINT_SOURCE: eth
     depends_on:
       - user
       - nacos
     env_file:
       - lucky.env
+    networks:
+      - elk
+      - mq
+      - default
   lucky-btc:
     image: docker-registry:32410/lucky_adapter
     container_name: lucky-btc
     privileged: true
     environment:
       MYSQL_URL: jdbc:mysql://mysql:3306/lucky?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
-      LUCKY_TYPE: btc
+      POINT_SOURCE: btc
     depends_on:
       - user
       - nacos
     env_file:
       - lucky.env
+    networks:
+      - elk
+      - mq
+      - default
 networks:
   elk:
     external: true
-    name: docker-elk_elk
+    name: elk_elk
+  mq:
+    external: true
+    name: rmq
 
 
 
