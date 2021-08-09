@@ -16,20 +16,7 @@ public class GameConstant {
     public static BigDecimal TAX = BigDecimal.valueOf(0.05);
 
     public static Map<BetTypeEnum, BetType> betTypeMap = new HashMap<BetTypeEnum, BetType>(){{
-        put(BetTypeEnum.BIG, new BetType(BetTypeEnum.BIG, point -> point.compareTo(4) > 0, BigDecimal.valueOf(2)));
-        put(BetTypeEnum.SMALL, new BetType(BetTypeEnum.SMALL, point -> point.compareTo(4) <= 0, BigDecimal.valueOf(2)));
-        put(BetTypeEnum.OOD, new BetType(BetTypeEnum.OOD, point -> point % 2 != 0, BigDecimal.valueOf(2)));
-        put(BetTypeEnum.EVEN, new BetType(BetTypeEnum.EVEN, point -> point % 2 == 0, BigDecimal.valueOf(2)));
-        put(BetTypeEnum.NUMBER_0, new BetType(BetTypeEnum.NUMBER_0, point -> point == 0, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_1, new BetType(BetTypeEnum.NUMBER_1, point -> point == 1, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_2, new BetType(BetTypeEnum.NUMBER_2, point -> point == 2, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_3, new BetType(BetTypeEnum.NUMBER_3, point -> point == 3, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_4, new BetType(BetTypeEnum.NUMBER_4, point -> point == 4, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_5, new BetType(BetTypeEnum.NUMBER_5, point -> point == 5, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_6, new BetType(BetTypeEnum.NUMBER_6, point -> point == 6, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_7, new BetType(BetTypeEnum.NUMBER_7, point -> point == 7, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_8, new BetType(BetTypeEnum.NUMBER_8, point -> point == 8, BigDecimal.valueOf(10)));
-        put(BetTypeEnum.NUMBER_9, new BetType(BetTypeEnum.NUMBER_9, point -> point == 9, BigDecimal.valueOf(10)));
+
     }};
 
     public static Map<BankerTypeEnum, List<BetTypeEnum>> bankerBetTypeMap = new HashMap<BankerTypeEnum, List<BetTypeEnum>>(){{
@@ -47,5 +34,7 @@ public class GameConstant {
         put(BankerTypeEnum.NUMBER, "扫雷");
         put(BankerTypeEnum.BIG_SMALL, "大小");
         put(BankerTypeEnum.OOD_EVEN, "单双");
+        put(BankerTypeEnum.NN, "牛牛");
+        put(BankerTypeEnum.SN, "扫牛");
     }};
 }

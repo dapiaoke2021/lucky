@@ -38,4 +38,8 @@ public class PointGameBanker extends Banker {
         return totalTax;
     }
 
+    @Override
+    public int open(Map<BetTypeEnum, Integer> betMap, List<BetTypeResult> bankerBetTypeResults) {
+        return 0;
+    }
 }

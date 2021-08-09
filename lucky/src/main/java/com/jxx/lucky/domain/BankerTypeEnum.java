@@ -11,6 +11,8 @@ public enum BankerTypeEnum {
     OOD_EVEN,
     // 波胆
     NUMBER,
+    // 扫牛
+    SN,
     // 牛牛
     NN;
 }

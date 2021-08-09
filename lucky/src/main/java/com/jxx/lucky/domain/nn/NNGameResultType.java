@@ -16,8 +16,12 @@ public class NNGameResultType extends ResultType implements Comparable<NNGameRes
         this.odds = getOdds(this.niu);
     }
 
-    private BigDecimal getOdds(NiuEnum niuEnum) {
-        return BigDecimal.ONE;
+    private Integer getOdds(NiuEnum niuEnum) {
+        if (niuEnum.equals(NiuEnum.NIU_NIU)) {
+            return 3;
+        } else {
+            return 2;
+        }
     }
 
     private NiuEnum getNiu(String points) {

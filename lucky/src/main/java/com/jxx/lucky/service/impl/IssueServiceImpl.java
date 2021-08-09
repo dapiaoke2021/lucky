@@ -97,7 +97,7 @@ public class IssueServiceImpl implements IssueService {
             betRecordDO.setBetNo(betNo);
             betMapper.insert(betRecordDO);
         }
-        currentIssue.bet(player, bets);
+        currentIssue.bet(player, bets, betNo);
         // todo: 发送BetEvent
 
         return betNo;
@@ -162,7 +162,7 @@ public class IssueServiceImpl implements IssueService {
     }
 
     @Override
-    public Map<BankerTypeEnum, PointGameBanker> getCurrentBanker() {
+    public Map<BankerTypeEnum, Banker> getCurrentBanker() {
         return currentIssue.getBankerMap();
     }
 
@@ -205,7 +205,7 @@ public class IssueServiceImpl implements IssueService {
             boolean isOff = offBankers.stream().anyMatch(
                     offBank -> offBank.getUserId().equals(currentBanker.getUserId()));
             // 主动下庄或钱不够下庄 topBet + result 是下一期续庄的分
-            Integer nextIssueTopBet = currentBanker.getResult() + currentBanker.getTopBet();
+            Integer nextIssueTopBet = currentBanker.getResult() + currentBanker.getMoney();
             if (isOff || nextIssueTopBet.compareTo(bankerMinMoney) < 0) {
                 // todo: currentBanker 发送下庄事件 offedBanker
                 Player player = bankerQueueMap.get(bankerType).poll();
@@ -230,6 +230,8 @@ public class IssueServiceImpl implements IssueService {
         issueDO.setIssueNo(nextIssue.getIssueNo());
         issueDO.setState(IssueStateEnum.BETTING);
         issueMapper.insert(issueDO);
+
+        // todo: createdIssueEvent
     }
 
     @Override
@@ -272,14 +274,18 @@ public class IssueServiceImpl implements IssueService {
     }
 
     private void savePlayerBets() {
-        // todo: next 存玩家数据更改
-        List<BetType> hitBetTypes = currentIssue.getHitBets();
-        UpdateWrapper<BetRecordDO> betRecordDOUpdateWrapper = new UpdateWrapper<>();
-        betRecordDOUpdateWrapper.lambda()
-                .eq(BetRecordDO::getIssueNo, currentIssue.getIssueNo())
-                .set(BetRecordDO::getResult, true)
-                .eq(BetRecordDO::getState, BetStateEnum.ONGOING)
-                .in(BetRecordDO::getBetType, hitBetTypes);
+        Map<Long, Player> playerMap = currentIssue.getPlayerMap();
+        playerMap.forEach((id, player) -> {
+            List<Bet> bets = player.getBets();
+            bets.forEach(bet -> {
+                UpdateWrapper<BetRecordDO> betRecordDOUpdateWrapper = new UpdateWrapper<>();
+                betRecordDOUpdateWrapper.lambda()
+                        .eq(BetRecordDO::getIssueNo, currentIssue.getIssueNo())
+                        .eq(BetRecordDO::getBetNo, bet.getBetNo())
+                        .set(BetRecordDO::getResult, bet.getResult())
+                        .eq(BetRecordDO::getState, BetStateEnum.SETTLED);
+            });
+        });
     }
 
     private void saveIssueResult(String[] points) {

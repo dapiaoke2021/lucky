@@ -116,10 +116,10 @@ public class IssuePointServiceImplTest {
         Mockito.when(bankerRecordMapper.insert(bankRecordCaptor.capture())).thenReturn(1);
         issueService.becomeBanker(1L, BankerTypeEnum.BIG_SMALL, 1000);
         Assertions.assertEquals(bankerRecordDO1, bankRecordCaptor.getValue());
-        Map<BankerTypeEnum, PointGameBanker> currentBankerMap = issueService.getCurrentBanker();
+        Map<BankerTypeEnum, Banker> currentBankerMap = issueService.getCurrentBanker();
         PointGameBanker banker = new PointGameBanker();
         banker.setUserId(1L);
-        banker.setTopBet(1000);
+        banker.setMoney(1000);
         banker.setType(BankerTypeEnum.BIG_SMALL);
         Assertions.assertEquals(banker, currentBankerMap.get(BankerTypeEnum.BIG_SMALL));
     }
@@ -127,7 +127,7 @@ public class IssuePointServiceImplTest {
     @Test
     public void testBecomeBankerInQueue() {
         IssuePoint currentIssue = (IssuePoint) ReflectionTestUtils.getField(issueService, "currentIssue");
-        Map<BankerTypeEnum, PointGameBanker> currentBanker = currentIssue.getBankerMap();
+        Map<BankerTypeEnum, Banker> currentBanker = currentIssue.getBankerMap();
         PointGameBanker banker = new PointGameBanker();
         banker.setUserId(1L);
         currentBanker.put(BankerTypeEnum.BIG_SMALL, banker);
@@ -207,7 +207,7 @@ public class IssuePointServiceImplTest {
         Mockito.when(robotService.createRobot()).thenReturn(robot);
         issueService.open(new String[]{"1", "1", "3", "1234.08", "1234.08"});
 
-        Map<BankerTypeEnum, PointGameBanker> currentBanker = issueService.getCurrentBanker();
+        Map<BankerTypeEnum, Banker> currentBanker = issueService.getCurrentBanker();
         Assertions.assertEquals(2L, currentBanker.get(BankerTypeEnum.BIG_SMALL).getUserId());
         Assertions.assertEquals(5L, currentBanker.get(BankerTypeEnum.OOD_EVEN).getUserId());
         Assertions.assertEquals(4L, currentBanker.get(BankerTypeEnum.NUMBER).getUserId());
@@ -225,7 +225,7 @@ public class IssuePointServiceImplTest {
                 3L,
                 Arrays.asList(new BetParam(BetTypeEnum.SMALL, 100), new BetParam(BetTypeEnum.BIG, 200)));
         issueService.open(new String[]{"1", "1", "3", "1234.08", "1234.08"});
-        Map<BankerTypeEnum, PointGameBanker> currentBanker = issueService.getCurrentBanker();
+        Map<BankerTypeEnum, Banker> currentBanker = issueService.getCurrentBanker();
         Assertions.assertEquals(2L, currentBanker.get(BankerTypeEnum.BIG_SMALL).getUserId());
     }
 }

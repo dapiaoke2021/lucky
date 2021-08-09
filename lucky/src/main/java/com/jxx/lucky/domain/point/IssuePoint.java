@@ -54,7 +54,7 @@ public class IssuePoint extends Issue{
 
         PointGameBanker banker = new PointGameBanker();
         banker.setUserId(player.getId());
-        banker.setTopBet(player.getMoney());
+        banker.setMoney(player.getMoney());
         banker.setType(bankerType);
         bankerMap.put(bankerType, banker);
 
@@ -81,21 +81,19 @@ public class IssuePoint extends Issue{
         List<BetType> hitBets = getHitBets(point);
         int playerTotalTax = playerMap.values().stream().reduce(
                 0,
-                (sum, player) -> sum + player.open(hitBets),
+                (sum, player) -> sum + 0,// player.open(hitBets),
                 Integer::sum
         );
         int bankerTotalTax = bankerMap.values().stream().reduce(
                 0,
-                (sum, banker) -> sum + banker.open(betMap, ),
+                (sum, banker) -> sum + 0,//banker.open(betMap, ),
                 Integer::sum
         );
         this.tax = playerTotalTax + bankerTotalTax;
     }
 
     public List<BetType> getHitBets(Integer point) {
-        return GameConstant.betTypeMap.values().stream()
-                .filter(hitPre -> hitPre.getPredictor().apply(point))
-                .collect(Collectors.toList());
+        return new ArrayList<>();
     }
 
     @Synchronized
@@ -135,7 +133,7 @@ public class IssuePoint extends Issue{
 
         playerMap.putIfAbsent(player.getId(), player);
         bets.forEach(betParam -> {
-            player.bet(betParam.getAmount(), betParam.getBetType());
+            player.bet(betParam.getAmount(), betParam.getBetType(), betNo);
         });
         this.betMap = betMapTmp;
         this.topBetMap = topBet;
@@ -185,7 +183,7 @@ public class IssuePoint extends Issue{
                     return;
                 }
                 // 最大可下注额 = (其他区域下注总额 + 庄家身上的钱)/(赔率-1) - 已下注额
-                Integer maxBet = BigDecimal.valueOf(otherTotalBet + banker.getTopBet())
+                Integer maxBet = BigDecimal.valueOf(otherTotalBet + banker.getMoney())
                         .divide(
                                 GameConstant.betTypeMap.get(betType).getWinOdds().subtract(BigDecimal.ONE),
                                 RoundingMode.FLOOR
@@ -207,7 +205,7 @@ public class IssuePoint extends Issue{
         betTypes.forEach(betType -> {
             topBetMap.put(
                     betType,
-                    BigDecimal.valueOf(banker.getTopBet())
+                    BigDecimal.valueOf(banker.getMoney())
                             .divide(
                                     GameConstant.betTypeMap.get(betType).getWinOdds().subtract(BigDecimal.ONE),
                                     BigDecimal.ROUND_FLOOR)
