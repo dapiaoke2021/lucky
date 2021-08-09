@@ -1,6 +1,8 @@
 package com.jxx.lucky.domain;
 
 import com.alibaba.cola.exception.BizException;
+import com.jxx.lucky.domain.point.PointGameBanker;
+import com.jxx.lucky.domain.point.IssuePoint;
 import com.jxx.lucky.param.BetParam;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,12 +15,12 @@ import java.util.Collections;
 import java.util.Map;
 
 @ExtendWith(SpringExtension.class)
-public class IssueTest {
-    Issue issue;
+public class IssuePointTest {
+    IssuePoint issue;
 
     @BeforeEach
     public void init() {
-        issue = new Issue();
+        issue = new IssuePoint();
     }
 
     @Test
@@ -125,7 +127,7 @@ public class IssueTest {
         Assertions.assertEquals(expectedTops[13], topBetMap.get(BetTypeEnum.NUMBER_9));
     }
 
-    private void assertBanker(Player player, Banker banker) {
+    private void assertBanker(Player player, PointGameBanker banker) {
         Assertions.assertEquals(banker.getUserId(), player.id);
         Assertions.assertEquals(banker.getTopBet(), player.getMoney());
     }

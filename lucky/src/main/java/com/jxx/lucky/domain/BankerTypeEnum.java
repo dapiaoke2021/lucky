@@ -10,5 +10,7 @@ public enum BankerTypeEnum {
     // 单双
     OOD_EVEN,
     // 波胆
-    NUMBER;
+    NUMBER,
+    // 牛牛
+    NN;
 }

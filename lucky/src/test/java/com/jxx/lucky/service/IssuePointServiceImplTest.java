@@ -5,6 +5,8 @@ import com.alibaba.cola.exception.BizException;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.jxx.lucky.domain.*;
+import com.jxx.lucky.domain.point.PointGameBanker;
+import com.jxx.lucky.domain.point.IssuePoint;
 import com.jxx.lucky.dos.BankerRecordDO;
 import com.jxx.lucky.dos.BetRecordDO;
 import com.jxx.lucky.dos.IssueDO;
@@ -16,24 +18,19 @@ import com.jxx.lucky.service.impl.IssueServiceImpl;
 import com.jxx.user.service.IUserServiceApi;
 import com.jxx.user.vo.UserVO;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
-import org.aspectj.lang.annotation.After;
-import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.springframework.test.context.event.annotation.BeforeTestMethod;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 @ExtendWith(SpringExtension.class)
-public class IssueServiceImplTest {
+public class IssuePointServiceImplTest {
 
     @InjectMocks
     IssueServiceImpl issueService;
@@ -119,8 +116,8 @@ public class IssueServiceImplTest {
         Mockito.when(bankerRecordMapper.insert(bankRecordCaptor.capture())).thenReturn(1);
         issueService.becomeBanker(1L, BankerTypeEnum.BIG_SMALL, 1000);
         Assertions.assertEquals(bankerRecordDO1, bankRecordCaptor.getValue());
-        Map<BankerTypeEnum, Banker> currentBankerMap = issueService.getCurrentBanker();
-        Banker banker = new Banker();
+        Map<BankerTypeEnum, PointGameBanker> currentBankerMap = issueService.getCurrentBanker();
+        PointGameBanker banker = new PointGameBanker();
         banker.setUserId(1L);
         banker.setTopBet(1000);
         banker.setType(BankerTypeEnum.BIG_SMALL);
@@ -129,9 +126,9 @@ public class IssueServiceImplTest {
 
     @Test
     public void testBecomeBankerInQueue() {
-        Issue currentIssue = (Issue) ReflectionTestUtils.getField(issueService, "currentIssue");
-        Map<BankerTypeEnum, Banker> currentBanker = currentIssue.getBankerMap();
-        Banker banker = new Banker();
+        IssuePoint currentIssue = (IssuePoint) ReflectionTestUtils.getField(issueService, "currentIssue");
+        Map<BankerTypeEnum, PointGameBanker> currentBanker = currentIssue.getBankerMap();
+        PointGameBanker banker = new PointGameBanker();
         banker.setUserId(1L);
         currentBanker.put(BankerTypeEnum.BIG_SMALL, banker);
 
@@ -208,9 +205,9 @@ public class IssueServiceImplTest {
         robot.setId(5L);
         robot.setMoney(10000);
         Mockito.when(robotService.createRobot()).thenReturn(robot);
-        issueService.open(8);
+        issueService.open(new String[]{"1", "1", "3", "1234.08", "1234.08"});
 
-        Map<BankerTypeEnum, Banker> currentBanker = issueService.getCurrentBanker();
+        Map<BankerTypeEnum, PointGameBanker> currentBanker = issueService.getCurrentBanker();
         Assertions.assertEquals(2L, currentBanker.get(BankerTypeEnum.BIG_SMALL).getUserId());
         Assertions.assertEquals(5L, currentBanker.get(BankerTypeEnum.OOD_EVEN).getUserId());
         Assertions.assertEquals(4L, currentBanker.get(BankerTypeEnum.NUMBER).getUserId());
@@ -227,8 +224,8 @@ public class IssueServiceImplTest {
         issueService.bet(
                 3L,
                 Arrays.asList(new BetParam(BetTypeEnum.SMALL, 100), new BetParam(BetTypeEnum.BIG, 200)));
-        issueService.open(8);
-        Map<BankerTypeEnum, Banker> currentBanker = issueService.getCurrentBanker();
+        issueService.open(new String[]{"1", "1", "3", "1234.08", "1234.08"});
+        Map<BankerTypeEnum, PointGameBanker> currentBanker = issueService.getCurrentBanker();
         Assertions.assertEquals(2L, currentBanker.get(BankerTypeEnum.BIG_SMALL).getUserId());
     }
 }

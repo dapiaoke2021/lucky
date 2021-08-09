@@ -1,14 +1,10 @@
 package com.jxx.lucky.domain;
 
-import com.alibaba.cola.exception.ExceptionFactory;
 import com.jxx.lucky.param.BetParam;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author a1
@@ -16,52 +12,61 @@ import java.util.Objects;
 @Data
 public class Player {
     Long id;
-    Map<BetTypeEnum, Integer> bets;
+    List<Bet> bets;
     Integer money;
     Integer bonus;
 
     public Player() {
-        bets = new HashMap<>();
+        bets = new ArrayList<>();
     }
 
-    public void bet(Integer money, BetTypeEnum type){
+    public void bet(Integer money, BetTypeEnum type, String betNo){
         this.money -= money;
-        bets.merge(type, money, Integer::sum);
+        bets.add(new Bet(money, type, betNo, null));
     }
 
     public Integer unBet(BetTypeEnum type) {
-        Integer totalBet = bets.get(type);
-        if (totalBet == null) {
-            throw ExceptionFactory.bizException("S_PLAYER_HAS_NOT_BET", "没有下注，撤销失败");
-        }
-
-        return totalBet;
+        // dummy
+        return 0;
     }
 
     public int open(List<BetType> hitBets) {
+
+        hitBets.forEach(betType -> {
+            bets.forEach(bet -> {
+                boolean hit = hitBets.
+                if ()
+            });
+            bets.stream()
+                    .forEach()
+                    .filter(bet -> bet.getBetType().equals(betType.getType()))
+                    .forEach(bet -> bet.setResult());
+        });
+
         int totalWin = hitBets.stream().reduce(
                 0,
                 (sum, hitBet) -> {
-                    Integer betMoney = bets.get(hitBet.getType());
+                    Integer betMoney = bets. bets.get(hitBet.getType());
                     if (betMoney == null) {
                         return sum;
                     }
 
+
                     // 赢钱 = 下注额 *（赔率-1）
                     // 最低下注额1元，所以取整没问题
-                    return sum + BigDecimal.valueOf(betMoney).multiply(hitBet.getOdds().subtract(BigDecimal.ONE)).intValue();
+                    return sum + BigDecimal.valueOf(betMoney).multiply(hitBet.getWinOdds().subtract(BigDecimal.ONE)).intValue();
                 },
                 Integer::sum
         );
         int totalTax = hitBets.stream().reduce(
                 0,
                 (sum, hitBet) -> {
-                    Integer betMoney = bets.get(hitBet.getType());
+                    Integer betMoney =  bets.get(hitBet.getType());
                     if (betMoney == null) {
                         return sum;
                     }
 
-                    BigDecimal winMoney = BigDecimal.valueOf(betMoney).multiply(hitBet.getOdds().subtract(BigDecimal.ONE));
+                    BigDecimal winMoney = BigDecimal.valueOf(betMoney).multiply(hitBet.getWinOdds().subtract(BigDecimal.ONE));
                     return sum + winMoney.multiply(GameConstant.TAX).intValue();
 
                 },

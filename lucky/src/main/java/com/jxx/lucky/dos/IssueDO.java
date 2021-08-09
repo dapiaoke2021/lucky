@@ -13,6 +13,6 @@ import lombok.Data;
 public class IssueDO {
     @TableId
     private String issueNo;
-    private Integer point;
+    private String points;
     private IssueStateEnum state;
 }

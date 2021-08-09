@@ -4,6 +4,8 @@ import cn.hutool.core.date.DateUtil;
 import com.alibaba.cola.exception.ExceptionFactory;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.jxx.lucky.domain.*;
+import com.jxx.lucky.domain.point.PointGameBanker;
+import com.jxx.lucky.domain.point.IssuePoint;
 import com.jxx.lucky.dos.BankerRecordDO;
 import com.jxx.lucky.dos.BetRecordDO;
 import com.jxx.lucky.dos.IssueDO;
@@ -69,7 +71,7 @@ public class IssueServiceImpl implements IssueService {
         bankerQueueMap.put(BankerTypeEnum.OOD_EVEN, new ConcurrentLinkedQueue<>());
         bankerQueueMap.put(BankerTypeEnum.NUMBER, new ConcurrentLinkedQueue<>());
 
-        currentIssue = new Issue();
+        currentIssue = new IssuePoint();
         currentIssue.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
         if(issueMapper.selectById(currentIssue.getIssueNo()) == null) {
             IssueDO issueDO = new IssueDO();
@@ -160,7 +162,7 @@ public class IssueServiceImpl implements IssueService {
     }
 
     @Override
-    public Map<BankerTypeEnum, Banker> getCurrentBanker() {
+    public Map<BankerTypeEnum, PointGameBanker> getCurrentBanker() {
         return currentIssue.getBankerMap();
     }
 
@@ -185,16 +187,16 @@ public class IssueServiceImpl implements IssueService {
     }
 
     @Override
-    public void open(Integer point) {
-        currentIssue.open(point);
-        saveIssue(currentIssue);
+    public void open(String[] points) {
+        currentIssue.open(points);
+        saveIssue(currentIssue, points);
 
         // todo: IssueOpenedEvent
         newIssue();
     }
 
     private void newIssue() {
-        Issue nextIssue = new Issue();
+        IssuePoint nextIssue = new IssuePoint();
         nextIssue.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
 
         // 庄家处理
@@ -252,10 +254,10 @@ public class IssueServiceImpl implements IssueService {
 
 
     @Transactional(rollbackFor = Exception.class)
-    protected void saveIssue(Issue currentIssue) {
+    protected void saveIssue(Issue currentIssue, String[] points) {
         // 如果保存错误，在异常处理中将所有投注记录设置为失效（INIT，OPENED, FAIL）
-        saveIssueResult(currentIssue.getPoint());
-        savePlayerBets(currentIssue.getPoint());
+        saveIssueResult(points);
+        savePlayerBets();
         saveBanker(currentIssue.getBankerMap().values());
     }
 
@@ -269,21 +271,22 @@ public class IssueServiceImpl implements IssueService {
         });
     }
 
-    private void savePlayerBets(Integer point) {
-        List<BetType> hitBetTypes = currentIssue.getHitBets(point);
+    private void savePlayerBets() {
+        // todo: next 存玩家数据更改
+        List<BetType> hitBetTypes = currentIssue.getHitBets();
         UpdateWrapper<BetRecordDO> betRecordDOUpdateWrapper = new UpdateWrapper<>();
         betRecordDOUpdateWrapper.lambda()
                 .eq(BetRecordDO::getIssueNo, currentIssue.getIssueNo())
-                .set(BetRecordDO::getWin, true)
+                .set(BetRecordDO::getResult, true)
                 .eq(BetRecordDO::getState, BetStateEnum.ONGOING)
                 .in(BetRecordDO::getBetType, hitBetTypes);
     }
 
-    private void saveIssueResult(Integer point) {
+    private void saveIssueResult(String[] points) {
         UpdateWrapper<IssueDO> updateWrapper = new UpdateWrapper<>();
         updateWrapper.lambda()
                 .eq(IssueDO::getIssueNo, currentIssue.getIssueNo())
-                .set(IssueDO::getPoint, point);
+                .set(IssueDO::getPoints, String.join(",", points));
         issueMapper.update(null, updateWrapper);
     }
 

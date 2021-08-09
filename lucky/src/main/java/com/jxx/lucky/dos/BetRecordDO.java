@@ -26,7 +26,7 @@ public class BetRecordDO {
 
     private Timestamp createTime;
 
-    private Boolean win;
+    private Integer result;
 
     /**
      * 下注单号 playerId-YYYYMMDDHHmmSS

@@ -19,9 +19,9 @@ public class OpenScheduler {
 
     @Scheduled(cron = "5 * * * * ?")
     public void openEveryMinute() {
-        int point = pointGenerator.getPoint(issueService.getCurrentIssueNo());
-        log.info("{}期开奖{}", issueService.getCurrentIssueNo(), point);
-        issueService.open(point);
+        String[] points = pointGenerator.getPoint(issueService.getCurrentIssueNo());
+        log.info("{}期开奖{}", issueService.getCurrentIssueNo(), points);
+        issueService.open(points);
     }
 
     @Scheduled(cron = "55 * * * * ?")

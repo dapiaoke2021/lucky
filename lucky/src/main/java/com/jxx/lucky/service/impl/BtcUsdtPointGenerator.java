@@ -16,7 +16,7 @@ import java.util.HashMap;
 public class BtcUsdtPointGenerator implements IPointGenerator {
 
     @Override
-    public Integer getPoint(String no) {
+    public String[] getPoint(String no) {
         int year = DateUtil.date().getField(DateField.YEAR);
         DateTime date = DateUtil.parse(year + no, "yyyyMMddHHmm");
         String response = HttpUtil.get("https://www.binance.com/fapi/v1/klines", new HashMap<String, Object>(){{
@@ -33,7 +33,6 @@ public class BtcUsdtPointGenerator implements IPointGenerator {
                 DateUtil.offsetSecond(date, 1).getTime(),
                 last
         );
-        String data = (String) last.get(4);
-        return Integer.parseInt(String.valueOf(data.charAt(data.length() - 1)));
+        return last.stream().map(Object::toString).toArray(String[]::new);
     }
 }

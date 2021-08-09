@@ -1,6 +1,6 @@
 package com.jxx.lucky.vo;
 
-import com.jxx.lucky.domain.Banker;
+import com.jxx.lucky.domain.point.PointGameBanker;
 import com.jxx.lucky.domain.BankerTypeEnum;
 import com.jxx.lucky.domain.Player;
 import io.swagger.annotations.ApiModel;
@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Data
 public class IssueBankerVO {
     @ApiModelProperty("当前庄家")
-    private Map<BankerTypeEnum, Banker> currentBanker;
+    private Map<BankerTypeEnum, PointGameBanker> currentBanker;
 
     @ApiModelProperty("队列中庄家")
     private Map<BankerTypeEnum, ConcurrentLinkedQueue<Player>> bankerQueueMap;
