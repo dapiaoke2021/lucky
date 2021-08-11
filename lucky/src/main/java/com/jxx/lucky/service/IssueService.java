@@ -1,7 +1,6 @@
 package com.jxx.lucky.service;
 
 import com.jxx.lucky.domain.Banker;
-import com.jxx.lucky.domain.point.PointGameBanker;
 import com.jxx.lucky.domain.BankerTypeEnum;
 import com.jxx.lucky.domain.BetTypeEnum;
 import com.jxx.lucky.domain.Player;

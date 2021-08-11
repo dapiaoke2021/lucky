@@ -23,10 +23,10 @@ public class GameConstant {
         put(BankerTypeEnum.BIG_SMALL, Arrays.asList(BetTypeEnum.BIG, BetTypeEnum.SMALL));
         put(BankerTypeEnum.OOD_EVEN, Arrays.asList(BetTypeEnum.EVEN, BetTypeEnum.OOD));
         put(BankerTypeEnum.NUMBER, Arrays.asList(
-                BetTypeEnum.NUMBER_0, BetTypeEnum.NUMBER_1, BetTypeEnum.NUMBER_2,
-                BetTypeEnum.NUMBER_3, BetTypeEnum.NUMBER_4, BetTypeEnum.NUMBER_5,
-                BetTypeEnum.NUMBER_6, BetTypeEnum.NUMBER_7, BetTypeEnum.NUMBER_8,
-                BetTypeEnum.NUMBER_9
+                BetTypeEnum.NIU_NIU, BetTypeEnum.NIU_1, BetTypeEnum.NIU_2,
+                BetTypeEnum.NIU_3, BetTypeEnum.NIU_4, BetTypeEnum.NIU_5,
+                BetTypeEnum.NIU_6, BetTypeEnum.NIU_7, BetTypeEnum.NIU_8,
+                BetTypeEnum.NIU_9
         ));
     }};
 

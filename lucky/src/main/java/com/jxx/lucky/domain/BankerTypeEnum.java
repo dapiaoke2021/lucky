@@ -14,5 +14,8 @@ public enum BankerTypeEnum {
     // 扫牛
     SN,
     // 牛牛
-    NN;
+    NN,
+    // 对子
+    DUI
+
 }

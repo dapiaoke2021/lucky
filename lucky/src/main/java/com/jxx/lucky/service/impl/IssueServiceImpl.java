@@ -4,8 +4,7 @@ import cn.hutool.core.date.DateUtil;
 import com.alibaba.cola.exception.ExceptionFactory;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.jxx.lucky.domain.*;
-import com.jxx.lucky.domain.point.PointGameBanker;
-import com.jxx.lucky.domain.point.IssuePoint;
+import com.jxx.lucky.domain.nn.IssueNN;
 import com.jxx.lucky.dos.BankerRecordDO;
 import com.jxx.lucky.dos.BetRecordDO;
 import com.jxx.lucky.dos.IssueDO;
@@ -35,7 +34,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Service
 public class IssueServiceImpl implements IssueService {
 
-    private Issue currentIssue;
+    private IssueNN currentIssue;
 
     private final RobotService robotService;
 
@@ -52,6 +51,9 @@ public class IssueServiceImpl implements IssueService {
 
     @Value("${banker-min-money}")
     Integer bankerMinMoney;
+
+    @Value("${game-config}")
+    List<GameConfig> gameConfigs;
 
     //todo: 事件：上庄，下庄，下注，结算。使用spring cloud标准
 
@@ -71,7 +73,7 @@ public class IssueServiceImpl implements IssueService {
         bankerQueueMap.put(BankerTypeEnum.OOD_EVEN, new ConcurrentLinkedQueue<>());
         bankerQueueMap.put(BankerTypeEnum.NUMBER, new ConcurrentLinkedQueue<>());
 
-        currentIssue = new IssuePoint();
+        currentIssue = new IssueNN();
         currentIssue.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
         if(issueMapper.selectById(currentIssue.getIssueNo()) == null) {
             IssueDO issueDO = new IssueDO();
@@ -113,7 +115,6 @@ public class IssueServiceImpl implements IssueService {
                 .eq(BetRecordDO::getIssueNo, currentIssue.getIssueNo())
                 .eq(BetRecordDO::getBetType, type)
                 .set(BetRecordDO::getState, BetStateEnum.REVOKE);
-        currentIssue.unBet(player, type);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -133,9 +134,9 @@ public class IssueServiceImpl implements IssueService {
         becomeBanker(player, bankerType, currentIssue);
     }
 
-    private void becomeBanker(Player player, BankerTypeEnum bankerType,  Issue issue) {
+    private void becomeBanker(Player player, BankerTypeEnum bankerType,  IssueNN issue) {
         // 已有人上庄则进入上庄队列
-        Banker currentBanker = issue.getBankerMap().get(bankerType);
+        Banker currentBanker = issue.getBanker(bankerType);
         if (currentBanker != null) {
             bankerQueueMap.get(bankerType).add(player);
 
@@ -196,7 +197,7 @@ public class IssueServiceImpl implements IssueService {
     }
 
     private void newIssue() {
-        IssuePoint nextIssue = new IssuePoint();
+        IssueNN nextIssue = new IssueNN();
         nextIssue.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
 
         // 庄家处理
