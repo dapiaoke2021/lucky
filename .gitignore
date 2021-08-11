@@ -1,3 +1,13 @@
 .idea/
 */target/**
 spy.log
+api/api.iml
+auth/auth.iml
+auth_adapter/auth_adapter.iml
+cloud.iml
+common/common.iml
+gate/gate.iml
+lucky/lucky.iml
+lucky_adapter/lucky_adapter.iml
+user/user.iml
+user_adapter/user_adapter.iml
