@@ -12,3 +12,4 @@ lucky_adapter/lucky_adapter.iml
 user/user.iml
 user_adapter/user_adapter.iml
 admin_vue/node_modules/*
+admin_vue/dist/*

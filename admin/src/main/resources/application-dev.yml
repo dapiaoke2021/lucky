@@ -1,0 +1,75 @@
+project:
+    host:
+        name: ${PROJECT_HOST_NAME:127.0.0.1}
+    mysql:
+        hostname: ${PROJECT_MYSQL_HOSTNAME:127.0.0.1}
+        port: ${PROJECT_MYSQL_PORT:3306}
+        url: ${project.mysql.hostname}:${project.mysql.port}
+        username: ${PROJECT_MYSQL_USERNAME:root}
+        password: ${PROJECT_MYSQL_PASSWORD:123456}
+    admin:
+        mysql:
+            hostname: ${PROJECT_ADMIN_MYSQL_HOSTNAME:${project.mysql.hostname}}
+            port: ${PROJECT_ADMIN_MYSQL_PORT:${project.mysql.port}}
+            url: ${project.admin.mysql.hostname}:${project.admin.mysql.port}
+            username: ${PROJECT_ADMIN_MYSQL_USERNAME:${project.mysql.username}}
+            password: ${PROJECT_ADMIN_MYSQL_PASSWORD:${project.mysql.password}}
+    auth:
+        mysql:
+            hostname: ${PROJECT_AUTH_MYSQL_HOSTNAME:${project.mysql.hostname}}
+            #            port: ${PROJECT_AUTH_MYSQL_PORT:${project.mysql.port}}
+            port: ${PROJECT_AUTH_MYSQL_PORT:23306}
+            url: ${project.auth.mysql.hostname}:${project.auth.mysql.port}
+            username: ${PROJECT_AUTH_MYSQL_USERNAME:${project.mysql.username}}
+            password: ${PROJECT_AUTH_MYSQL_PASSWORD:${project.mysql.password}}
+    log:
+        file: ${PROJECT_LOG_PATH:/home/web/same_bpool/logs/}
+    file:
+        saveurl: ${PROJECT_FILE_SAVEURL:/home/web/same_bpool/file/}
+logging:
+    file: ${project.log.file}/logs.log
+file:
+    upload:
+        baseurl: http://${project.host.name}/file/
+        saveurl: ${project.file.saveurl}/images/
+spring:
+    datasource:
+        druid:
+            stat-view-servlet:
+                loginUsername: admin
+                loginPassword: 123456
+        # dynamic-datasource-spring-boot-starter 动态数据源的配置内容
+        dynamic:
+            druid:
+                max-pool-prepared-statement-per-connection-size: 20
+                reset-stat-enable: true
+                initial-size: 0
+                max-active: 8
+                min-idle: 2
+                max-wait: -1
+                min-evictable-idle-time-millis: 30000
+                max-evictable-idle-time-millis: 30000
+                time-between-eviction-runs-millis: 0
+                validation-query: select 1
+                validation-query-timeout: -1
+                test-on-borrow: false
+                test-on-return: false
+                test-while-idle: true
+                pool-prepared-statements: true
+                max-open-prepared-statements: 100
+                filters: stat,wall
+                share-prepared-statements: true
+            primary: admin # 设置默认的数据源或者数据源组，默认值即为 master
+            datasource:
+                # admin 数据源配置
+                admin:
+                    url: jdbc:mysql://${project.admin.mysql.url}/admin?useUnicode=true&characterEncoding=UTF-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8
+                    driver-class-name: com.mysql.cj.jdbc.Driver
+                    username: ${project.admin.mysql.username}
+                    password: ${project.admin.mysql.password}
+                # auth 数据源配置
+                auth:
+                    url: jdbc:mysql://${project.auth.mysql.url}/auth?useUnicode=true&characterEncoding=UTF-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8
+                    driver-class-name: com.mysql.cj.jdbc.Driver
+                    username: ${project.auth.mysql.username}
+                    password: ${project.auth.mysql.password}
