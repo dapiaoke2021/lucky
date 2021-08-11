@@ -1,0 +1,57 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: Jz123456
+      MYSQL_ROOT_HOST: "%"
+    volumes:
+      - /home/mysql:/var/lib/mysql
+    ports:
+      - "3307:3306"
+  redis:
+    image: redis
+    volumes:
+      - /home/redis:/data
+      - /home/redis.conf:/etc/redis.conf
+    command: --requirepass "070607"
+  back:
+    image: liuyuchan286/back:${BACK_TAG}
+    environment:
+      PROJECT_MYSQL_HOSTNAME: mysql
+      PROJECT_MYSQL_PORT: 3306
+      PROJECT_MYSQL_USERNAME: root
+      PROJECT_MYSQL_PASSWORD: Jz123456
+      PROJECT_REDIS_HOSTNAME: redis
+      PROJECT_REDIS_PORT: 6379
+      PROJECT_REDIS_PASSWORD:
+      ROBOT_URL_8692: httpsvr
+      GAME_URL_8691: httpsvr
+      AGENT_URL_6002: httpsvr
+      PROJECT_LOG_PATH: /home/web/logs/ozygod-pm
+    volumes:
+      - /home/web/logs/ozygod-pm:/home/web/logs/ozygod-pm
+      - /home/web/files:/home/web/files
+    ports:
+      - "9001:8080"
+    depends_on:
+      - mysql
+      - redis
+  front:
+    image: liuyuchan286/front:${FRONT_TAG}
+    ports:
+      - "9003:80"
+  logmonitor:
+    image: liuyuchan286/logmonitor:${LOGMONITOR_TAG}
+    environment:
+      PROJECT_MYSQL_HOSTNAME: mysql
+      PROJECT_MYSQL_PORT: 3306
+      PROJECT_MYSQL_USERNAME: root
+      PROJECT_MYSQL_PASSWORD: Jz123456
+    volumes:
+      - /home/logs:/home/logs
+    ports:
+      - "9002:8088"
+    depends_on:
+      - mysql
+      - redis

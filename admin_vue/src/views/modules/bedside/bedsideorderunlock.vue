@@ -1,0 +1,259 @@
+<template>
+  <div class="mod-config">
+    <el-form :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
+      <el-form-item>
+        <el-input v-model="dataForm.key" placeholder="参数名" clearable></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button @click="getDataList()">查询</el-button>
+        <el-button v-if="isAuth('bedside:bedsideorderunlock:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
+        <el-button v-if="isAuth('bedside:bedsideorderunlock:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
+      </el-form-item>
+    </el-form>
+    <el-table
+      :data="dataList"
+      border
+      v-loading="dataListLoading"
+      @selection-change="selectionChangeHandle"
+      style="width: 100%;">
+      <el-table-column
+        type="selection"
+        header-align="center"
+        align="center"
+        width="50">
+      </el-table-column>
+      <el-table-column
+        prop="id"
+        header-align="center"
+        align="center"
+        label="">
+      </el-table-column>
+      <el-table-column
+        prop="orderSn"
+        header-align="center"
+        align="center"
+        label="订单号">
+      </el-table-column>
+      <el-table-column
+        prop="tableId"
+        header-align="center"
+        align="center"
+        label="床头柜ID">
+      </el-table-column>
+      <el-table-column
+        prop="number"
+        header-align="center"
+        align="center"
+        label="二维码编号">
+      </el-table-column>
+      <el-table-column
+        prop="commandId"
+        header-align="center"
+        align="center"
+        label="命令ID">
+      </el-table-column>
+      <el-table-column
+        prop="openid"
+        header-align="center"
+        align="center"
+        label="用户唯一标识">
+      </el-table-column>
+      <el-table-column
+        prop="status"
+        header-align="center"
+        align="center"
+        label="开锁状态 1-未下发 2-已下发 3-已发送 4-已送达，已开锁 5-已关锁 6-下发失败">
+      </el-table-column>
+      <el-table-column
+        prop="type"
+        header-align="center"
+        align="center"
+        label="开锁方式 1-付费开锁 2-钥匙开锁">
+      </el-table-column>
+      <el-table-column
+        prop="time"
+        header-align="center"
+        align="center"
+        label="使用时长（秒）">
+      </el-table-column>
+      <el-table-column
+        prop="money"
+        header-align="center"
+        align="center"
+        label="消费金额">
+      </el-table-column>
+      <el-table-column
+        prop="content"
+        header-align="center"
+        align="center"
+        label="">
+      </el-table-column>
+      <el-table-column
+        prop="createdAt"
+        header-align="center"
+        align="center"
+        label="发起开锁时间">
+      </el-table-column>
+      <el-table-column
+        prop="updatedAt"
+        header-align="center"
+        align="center"
+        label="">
+      </el-table-column>
+      <el-table-column
+        prop="sendAt"
+        header-align="center"
+        align="center"
+        label="命令下发时间">
+      </el-table-column>
+      <el-table-column
+        prop="sentAt"
+        header-align="center"
+        align="center"
+        label="命令发送时间">
+      </el-table-column>
+      <el-table-column
+        prop="startAt"
+        header-align="center"
+        align="center"
+        label="实际开锁时间">
+      </el-table-column>
+      <el-table-column
+        prop="endAt"
+        header-align="center"
+        align="center"
+        label="关锁时间">
+      </el-table-column>
+      <el-table-column
+        prop="tableType"
+        header-align="center"
+        align="center"
+        label="锁类型  1nb锁   2蓝牙锁">
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        header-align="center"
+        align="center"
+        width="150"
+        label="操作">
+        <template slot-scope="scope">
+          <el-button type="text" size="small" @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
+          <el-button type="text" size="small" @click="deleteHandle(scope.row.id)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      @size-change="sizeChangeHandle"
+      @current-change="currentChangeHandle"
+      :current-page="pageIndex"
+      :page-sizes="[10, 20, 50, 100]"
+      :page-size="pageSize"
+      :total="totalPage"
+      layout="total, sizes, prev, pager, next, jumper">
+    </el-pagination>
+    <!-- 弹窗, 新增 / 修改 -->
+    <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList"></add-or-update>
+  </div>
+</template>
+
+<script>
+  import AddOrUpdate from './bedsideorderunlock-add-or-update'
+  export default {
+    data () {
+      return {
+        dataForm: {
+          key: ''
+        },
+        dataList: [],
+        pageIndex: 1,
+        pageSize: 10,
+        totalPage: 0,
+        dataListLoading: false,
+        dataListSelections: [],
+        addOrUpdateVisible: false
+      }
+    },
+    components: {
+      AddOrUpdate
+    },
+    activated () {
+      this.getDataList()
+    },
+    methods: {
+      // 获取数据列表
+      getDataList () {
+        this.dataListLoading = true
+        this.$http({
+          url: this.$http.adornUrl('/bedside/bedsideorderunlock/list'),
+          method: 'get',
+          params: this.$http.adornParams({
+            'page': this.pageIndex,
+            'limit': this.pageSize,
+            'key': this.dataForm.key
+          })
+        }).then(({data}) => {
+          if (data && data.code === 0) {
+            this.dataList = data.page.list
+            this.totalPage = data.page.totalCount
+          } else {
+            this.dataList = []
+            this.totalPage = 0
+          }
+          this.dataListLoading = false
+        })
+      },
+      // 每页数
+      sizeChangeHandle (val) {
+        this.pageSize = val
+        this.pageIndex = 1
+        this.getDataList()
+      },
+      // 当前页
+      currentChangeHandle (val) {
+        this.pageIndex = val
+        this.getDataList()
+      },
+      // 多选
+      selectionChangeHandle (val) {
+        this.dataListSelections = val
+      },
+      // 新增 / 修改
+      addOrUpdateHandle (id) {
+        this.addOrUpdateVisible = true
+        this.$nextTick(() => {
+          this.$refs.addOrUpdate.init(id)
+        })
+      },
+      // 删除
+      deleteHandle (id) {
+        var ids = id ? [id] : this.dataListSelections.map(item => {
+          return item.id
+        })
+        this.$confirm(`确定对[id=${ids.join(',')}]进行[${id ? '删除' : '批量删除'}]操作?`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.$http({
+            url: this.$http.adornUrl('/bedside/bedsideorderunlock/delete'),
+            method: 'post',
+            data: this.$http.adornData(ids, false)
+          }).then(({data}) => {
+            if (data && data.code === 0) {
+              this.$message({
+                message: '操作成功',
+                type: 'success',
+                duration: 1500,
+                onClose: () => {
+                  this.getDataList()
+                }
+              })
+            } else {
+              this.$message.error(data.msg)
+            }
+          })
+        })
+      }
+    }
+  }
+</script>

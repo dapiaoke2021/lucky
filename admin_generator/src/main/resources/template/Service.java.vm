@@ -1,0 +1,62 @@
+package ${package}.${moduleName}.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import ${mainPath}.common.utils.PageUtils;
+import ${package}.${moduleName}.dto.${className}DTO;
+import ${package}.${moduleName}.vo.${className}VO;
+import ${package}.${moduleName}.entity.${className}Entity;
+
+import java.io.Serializable;
+import java.util.Collection;
+
+
+/**
+ * ${comments}
+ *
+ * @author ${author}
+ * @email ${email}
+ * @date ${datetime}
+ */
+public interface ${className}Service extends IService<${className}Entity> {
+
+    /**
+     * 分页查询
+     * @param ${classname}
+     * @return
+     */
+    PageUtils queryPage(${className}DTO ${classname});
+    /**
+     * 根据id查询
+     * @param ${pk.attrname}
+     * @return
+     */
+    ${className}VO getById(${pk.attrType} ${pk.attrname});
+    /**
+     * 保存
+     * @param ${classname}
+     * @return
+     */
+    boolean save(${className}DTO ${classname});
+    /**
+     * 根据id修改
+     * @param ${classname}
+     * @return
+     */
+    boolean updateById(${className}DTO ${classname});
+    /**
+     * 根据id删除
+     * @param id
+     * @return
+     */
+    @Override
+    boolean removeById(Serializable id);
+
+    /**
+     * 根据id批量删除
+     * @param ids
+     * @return
+     */
+    @Override
+    boolean removeByIds(Collection<? extends Serializable> ids);
+}
+

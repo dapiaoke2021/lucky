@@ -1,0 +1,29 @@
+package ${package}.${moduleName}.conver;
+
+import ${package}.${moduleName}.dto.${className}DTO;
+import ${package}.${moduleName}.entity.${className}Entity;
+import ${package}.${moduleName}.vo.${className}VO;
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
+
+import java.util.List;
+
+/**
+ * @author liuyuchan286
+ * @email liuyuchan286@gmail.com
+ * @date 2020-02-07 12:36
+ */
+@Mapper
+public interface ${className}Conver {
+
+    ${className}Conver MAPPER =  Mappers.getMapper(${className}Conver.class);
+
+    ${className}Entity converDTO(${className}DTO ${classname}DTO);
+
+    List<${className}Entity> converDTO(List<${className}DTO> ${classname}DTOs);
+
+    ${className}VO conver(${className}Entity ${classname}Entities);
+
+    List<${className}VO> conver(List<${className}Entity> ${classname}Entities);
+
+}
