@@ -15,6 +15,7 @@ public class NNGame extends GameAbstract{
                 new BetType(BetTypeEnum.BET_1, 6), new BetType(BetTypeEnum.BET_2, 6)
         );
         this.name = "牛牛";
+        this.bankerType = BankerTypeEnum.NN;
     }
 
     @Override

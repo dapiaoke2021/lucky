@@ -23,9 +23,12 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author a1
@@ -69,9 +72,6 @@ public class IssueServiceImpl implements IssueService {
         this.offBankers = new ArrayList<>();
 
         bankerQueueMap = new ConcurrentHashMap<>();
-        bankerQueueMap.put(BankerTypeEnum.BIG_SMALL, new ConcurrentLinkedQueue<>());
-        bankerQueueMap.put(BankerTypeEnum.OOD_EVEN, new ConcurrentLinkedQueue<>());
-        bankerQueueMap.put(BankerTypeEnum.NUMBER, new ConcurrentLinkedQueue<>());
 
         currentIssue = new IssueNN();
         currentIssue.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
@@ -81,6 +81,18 @@ public class IssueServiceImpl implements IssueService {
             issueDO.setState(IssueStateEnum.BETTING);
             issueMapper.insert(issueDO);
         }
+    }
+
+    @PostConstruct
+    public void initGame() {
+        currentIssue.buildIssue(gameConfigs);
+    }
+
+    @PostConstruct
+    public void initBankerQueue() {
+        gameConfigs.forEach(gameConfig -> {
+            bankerQueueMap.put(gameConfig.getBankType(), new ConcurrentLinkedQueue<>());
+        });
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -164,7 +176,10 @@ public class IssueServiceImpl implements IssueService {
 
     @Override
     public Map<BankerTypeEnum, Banker> getCurrentBanker() {
-        return currentIssue.getBankerMap();
+        return gameConfigs.stream()
+                .map(gameConfig -> currentIssue.getBanker(gameConfig.getBankType()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Banker::getType, Function.identity()));
     }
 
     @Override
@@ -174,7 +189,7 @@ public class IssueServiceImpl implements IssueService {
 
     @Override
     public void offBanker(Long playerId, BankerTypeEnum bankerType) {
-        Banker currentBanker = currentIssue.getBankerMap().get(bankerType);
+        Banker currentBanker = getCurrentBanker().get(bankerType);
         if (currentBanker != null && currentBanker.getUserId().equals(playerId)) {
             offBankers.add(currentBanker);
             return;
@@ -198,10 +213,11 @@ public class IssueServiceImpl implements IssueService {
 
     private void newIssue() {
         IssueNN nextIssue = new IssueNN();
+        nextIssue.buildIssue(gameConfigs);
         nextIssue.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
 
         // 庄家处理
-        Map<BankerTypeEnum, Banker> currentBankerMap = currentIssue.getBankerMap();
+        Map<BankerTypeEnum, Banker> currentBankerMap = getCurrentBanker();
         currentBankerMap.forEach((bankerType, currentBanker) -> {
             boolean isOff = offBankers.stream().anyMatch(
                     offBank -> offBank.getUserId().equals(currentBanker.getUserId()));
@@ -261,7 +277,7 @@ public class IssueServiceImpl implements IssueService {
         // 如果保存错误，在异常处理中将所有投注记录设置为失效（INIT，OPENED, FAIL）
         saveIssueResult(points);
         savePlayerBets();
-        saveBanker(currentIssue.getBankerMap().values());
+        saveBanker(getCurrentBanker().values());
     }
 
     private void saveBanker(Collection<Banker> bankers) {

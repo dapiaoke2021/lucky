@@ -29,6 +29,21 @@ public class IssueNN extends Issue {
         gameMap.put(bankerTypeEnum, game);
     }
 
+    public void buildIssue(List<GameConfig> gameConfigs) {
+        gameConfigs.forEach(gameConfig -> {
+            try {
+                Class<?> gameClass = ClassLoader.getSystemClassLoader().loadClass(gameConfig.getGameClass());
+                gameMap.put(gameConfig.getBankType(), (Game) gameClass.newInstance());
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     @Synchronized
     @Override
     public void becomeBanker(BankerTypeEnum bankerType, Player player) {

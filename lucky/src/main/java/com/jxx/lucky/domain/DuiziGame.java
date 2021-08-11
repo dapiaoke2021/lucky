@@ -19,6 +19,7 @@ public class DuiziGame extends GameAbstract{
                 new BetType(BetTypeEnum.DUI77, 98), new BetType(BetTypeEnum.DUI88, 98),
                 new BetType(BetTypeEnum.DUI99, 98)
         );
+        this.bankerType = BankerTypeEnum.DUI;
     }
 
     @Override

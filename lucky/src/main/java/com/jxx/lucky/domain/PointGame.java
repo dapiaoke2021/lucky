@@ -20,6 +20,7 @@ public class PointGame extends GameAbstract{
                 new BetType(BetTypeEnum.NIU_7, 10), new BetType(BetTypeEnum.NIU_8, 10),
                 new BetType(BetTypeEnum.NIU_9, 10), new BetType(BetTypeEnum.NIU_NIU, 10)
         );
+        this.bankerType = BankerTypeEnum.SN;
     }
 
 

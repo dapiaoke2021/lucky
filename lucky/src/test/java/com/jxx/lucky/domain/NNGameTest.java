@@ -48,12 +48,13 @@ public class NNGameTest {
         player.setMoney(2000);
         player.setId(2L);
         Throwable throwable1 = Assertions.assertThrows(BizException.class, () -> {
+            nnGame.checkBet(player, Collections.singletonList(new BetParam(BetTypeEnum.BET_1, 400, null)));
             nnGame.bet(
                     player,
                     Collections.singletonList(new BetParam(BetTypeEnum.BET_1, 400, null)),
                     "betNo1");
         });
-        Assertions.assertEquals("扫牛庄家额度不足", throwable1.getMessage());
+        Assertions.assertEquals("牛牛庄家额度不足", throwable1.getMessage());
     }
 
     @DisplayName("押注测试——超过玩家最高额度")
@@ -68,6 +69,7 @@ public class NNGameTest {
         player.setMoney(2000);
         player.setId(2L);
         Throwable throwable1 = Assertions.assertThrows(BizException.class, () -> {
+            nnGame.checkBet(player, Collections.singletonList(new BetParam(BetTypeEnum.BET_1, 401, null)));
             nnGame.bet(
                     player,
                     Collections.singletonList(new BetParam(BetTypeEnum.BET_1, 401, null)),

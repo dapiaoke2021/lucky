@@ -5,6 +5,7 @@ import com.alibaba.cola.exception.BizException;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.jxx.lucky.domain.*;
+import com.jxx.lucky.domain.nn.IssueNN;
 import com.jxx.lucky.dos.BankerRecordDO;
 import com.jxx.lucky.dos.BetRecordDO;
 import com.jxx.lucky.dos.IssueDO;
@@ -63,11 +64,22 @@ public class IssuePointServiceImplTest {
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), BankerRecordDO.class);
     }
 
+
     @BeforeEach
     public  void IssueServiceImplTest() {
         ReflectionTestUtils.setField(issueService, "bankerMinMoney", 1000);
         ReflectionTestUtils.setField(issueService, "userService", userServiceApi);
         issueNo = DateUtil.format(DateUtil.date(), "MMddHHmm");
+        ReflectionTestUtils.setField(
+                issueService,
+                "gameConfigs",
+                Arrays.asList(
+                        new GameConfig(BankerTypeEnum.NN, "com.jxx.lucky.domain.NNGame"),
+                        new GameConfig(BankerTypeEnum.SN, "com.jxx.lucky.domain.PointGame")
+                )
+        );
+        issueService.initGame();
+        issueService.initBankerQueue();
     }
 
 
@@ -107,56 +119,57 @@ public class IssuePointServiceImplTest {
         mockGetUser(1L, 1000);
         BankerRecordDO bankerRecordDO1 = new BankerRecordDO();
         bankerRecordDO1.setAmount(1000);
-        bankerRecordDO1.setBankerType(BankerTypeEnum.BIG_SMALL);
+        bankerRecordDO1.setBankerType(BankerTypeEnum.NN);
         bankerRecordDO1.setPlayerId(1L);
         bankerRecordDO1.setIssueNo(issueNo);
 
         Mockito.when(bankerRecordMapper.insert(bankRecordCaptor.capture())).thenReturn(1);
-        issueService.becomeBanker(1L, BankerTypeEnum.BIG_SMALL, 1000);
+        issueService.becomeBanker(1L, BankerTypeEnum.NN, 1000);
         Assertions.assertEquals(bankerRecordDO1, bankRecordCaptor.getValue());
         Map<BankerTypeEnum, Banker> currentBankerMap = issueService.getCurrentBanker();
-//        PointGameBanker banker = new PointGameBanker();
-//        banker.setUserId(1L);
-//        banker.setMoney(1000);
-//        banker.setType(BankerTypeEnum.BIG_SMALL);
-//        Assertions.assertEquals(banker, currentBankerMap.get(BankerTypeEnum.BIG_SMALL));
+        Banker banker = new Banker(new Player(), BankerTypeEnum.NN);
+        banker.setUserId(1L);
+        banker.setMoney(1000);
+        banker.setType(BankerTypeEnum.NN);
+        Assertions.assertEquals(banker, currentBankerMap.get(BankerTypeEnum.NN));
     }
 
     @Test
     public void testBecomeBankerInQueue() {
-//        IssuePoint currentIssue = (IssuePoint) ReflectionTestUtils.getField(issueService, "currentIssue");
-//        Map<BankerTypeEnum, Banker> currentBanker = currentIssue.getBankerMap();
-//        PointGameBanker banker = new PointGameBanker();
-//        banker.setUserId(1L);
-//        currentBanker.put(BankerTypeEnum.BIG_SMALL, banker);
+        IssueNN currentIssue = (IssueNN) ReflectionTestUtils.getField(issueService, "currentIssue");
+        Map<BankerTypeEnum, Banker> currentBanker = issueService.getCurrentBanker();
+        Player banker = new Player();
+        banker.setId(1L);
+        banker.setMoney(10000);
+        currentIssue.getGameMap().get(BankerTypeEnum.NN).becomeBanker(banker);
 
         mockGetUser(2L, 2000);
-        issueService.becomeBanker(2L, BankerTypeEnum.BIG_SMALL, 1001);
+        issueService.becomeBanker(2L, BankerTypeEnum.NN, 1001);
         Map<BankerTypeEnum, ConcurrentLinkedQueue<Player>> bankerQueue
                 = (Map<BankerTypeEnum, ConcurrentLinkedQueue<Player>>)ReflectionTestUtils.getField(issueService, "bankerQueueMap");
 
         Player player2 = new Player();
         player2.setMoney(1001);
         player2.setId(2L);
-        Assertions.assertEquals(player2, bankerQueue.get(BankerTypeEnum.BIG_SMALL).peek());
+        Assertions.assertEquals(player2, bankerQueue.get(BankerTypeEnum.NN).peek());
     }
 
     @Test
     public void testBet() {
         mockGetUser(1L, 1000);
-        issueService.becomeBanker(1L, BankerTypeEnum.BIG_SMALL, 1000);
+        issueService.becomeBanker(1L, BankerTypeEnum.NN, 1000);
 
         mockGetUser(3L, 1000);
         Mockito.when(betMapper.insert(betRecordDOArgumentCaptor.capture())).thenReturn(1);
         issueService.bet(
                 3L,
-                Arrays.asList(new BetParam(BetTypeEnum.SMALL, 100, null), new BetParam(BetTypeEnum.BIG, 200, null)));
+                Arrays.asList(new BetParam(BetTypeEnum.BET_1, 100, null), new BetParam(BetTypeEnum.BET_2, 100, null)));
         List<BetRecordDO> betRecordDOList = betRecordDOArgumentCaptor.getAllValues();
         String betNo = "3-" + DateUtil.format(DateUtil.date(), "yyyyMMddHHmmss");
         BetRecordDO betRecordDO1 = new BetRecordDO();
         betRecordDO1.setBetNo(betNo);
         betRecordDO1.setIssueNo(issueNo);
-        betRecordDO1.setBetType(BetTypeEnum.SMALL);
+        betRecordDO1.setBetType(BetTypeEnum.BET_1);
         betRecordDO1.setMoney(100);
         betRecordDO1.setPlayerId(3L);
         betRecordDO1.setState(BetStateEnum.ONGOING);
@@ -165,8 +178,8 @@ public class IssuePointServiceImplTest {
         BetRecordDO betRecordDO2 = new BetRecordDO();
         betRecordDO2.setBetNo(betNo);
         betRecordDO2.setIssueNo(issueNo);
-        betRecordDO2.setBetType(BetTypeEnum.BIG);
-        betRecordDO2.setMoney(200);
+        betRecordDO2.setBetType(BetTypeEnum.BET_2);
+        betRecordDO2.setMoney(100);
         betRecordDO2.setPlayerId(3L);
         betRecordDO2.setState(BetStateEnum.ONGOING);
         Assertions.assertEquals(betRecordDO2, betRecordDOList.get(1));
@@ -178,52 +191,46 @@ public class IssuePointServiceImplTest {
         // 情况2：下庄后没有玩家在等待队列，机器人顶上
         // 情况3：队列中的玩家下庄
         mockGetUser(1L, 10000);
-        issueService.becomeBanker(1L, BankerTypeEnum.BIG_SMALL, 10000);
+        issueService.becomeBanker(1L, BankerTypeEnum.NN, 10000);
         mockGetUser(2L, 10000);
-        issueService.becomeBanker(2L, BankerTypeEnum.BIG_SMALL, 10000);
+        issueService.becomeBanker(2L, BankerTypeEnum.NN, 10000);
 
-        mockGetUser(3L, 10000);
-        issueService.becomeBanker(3L, BankerTypeEnum.OOD_EVEN, 10000);
 
         mockGetUser(4L, 10000);
-        issueService.becomeBanker(4L, BankerTypeEnum.NUMBER, 10000);
-        mockGetUser(6L, 10000);
-        issueService.becomeBanker(6L, BankerTypeEnum.NUMBER, 10000);;
+        issueService.becomeBanker(4L, BankerTypeEnum.SN, 10000);
 
         mockGetUser(3L, 1000);
         issueService.bet(
                 3L,
-                Arrays.asList(new BetParam(BetTypeEnum.SMALL, 100, null), new BetParam(BetTypeEnum.BIG, 200, null)));
+                Arrays.asList(new BetParam(BetTypeEnum.BET_1, 100, null), new BetParam(BetTypeEnum.BET_2, 100, null)));
 
-        issueService.offBanker(1L, BankerTypeEnum.BIG_SMALL);
-        issueService.offBanker(3L, BankerTypeEnum.OOD_EVEN);
-        issueService.offBanker(6L, BankerTypeEnum.NUMBER);
+        issueService.offBanker(1L, BankerTypeEnum.NN);
+        issueService.offBanker(4L, BankerTypeEnum.SN);
 
         Player robot = new Player();
         robot.setId(5L);
         robot.setMoney(10000);
         Mockito.when(robotService.createRobot()).thenReturn(robot);
-        issueService.open(new String[]{"1", "1", "3", "1234.08", "1234.08"});
+        issueService.open(new String[]{"1", "1", "1234.08", "1234.08", "1234.08"});
 
         Map<BankerTypeEnum, Banker> currentBanker = issueService.getCurrentBanker();
-        Assertions.assertEquals(2L, currentBanker.get(BankerTypeEnum.BIG_SMALL).getUserId());
-        Assertions.assertEquals(5L, currentBanker.get(BankerTypeEnum.OOD_EVEN).getUserId());
-        Assertions.assertEquals(4L, currentBanker.get(BankerTypeEnum.NUMBER).getUserId());
+        Assertions.assertEquals(2L, currentBanker.get(BankerTypeEnum.NN).getUserId());
+        Assertions.assertEquals(5L, currentBanker.get(BankerTypeEnum.SN).getUserId());
     }
 
     @Test
     public void testOpenWhenNotEnoughOffBanker() {
         mockGetUser(1L, 1000);
-        issueService.becomeBanker(1L, BankerTypeEnum.BIG_SMALL, 1000);
+        issueService.becomeBanker(1L, BankerTypeEnum.NN, 1000);
         mockGetUser(2L, 10000);
-        issueService.becomeBanker(2L, BankerTypeEnum.BIG_SMALL, 10000);
+        issueService.becomeBanker(2L, BankerTypeEnum.NN, 10000);
 
         mockGetUser(3L, 1000);
         issueService.bet(
                 3L,
-                Arrays.asList(new BetParam(BetTypeEnum.SMALL, 100, null), new BetParam(BetTypeEnum.BIG, 200, null)));
-        issueService.open(new String[]{"1", "1", "3", "1234.08", "1234.08"});
+                Arrays.asList(new BetParam(BetTypeEnum.BET_1, 50, null), new BetParam(BetTypeEnum.BET_2, 50, null)));
+        issueService.open(new String[]{"1", "1", "1234.08", "1234.08", "1234.18"});
         Map<BankerTypeEnum, Banker> currentBanker = issueService.getCurrentBanker();
-        Assertions.assertEquals(2L, currentBanker.get(BankerTypeEnum.BIG_SMALL).getUserId());
+        Assertions.assertEquals(2L, currentBanker.get(BankerTypeEnum.NN).getUserId());
     }
 }

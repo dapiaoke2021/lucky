@@ -50,10 +50,6 @@ public abstract class GameAbstract implements Game {
             throw ExceptionFactory.bizException("S_ISSUE_ALREADY_HAS_BANKER","已有玩家坐庄");
         }
 
-        if( banker.getUserId().equals(player.getId())) {
-            throw ExceptionFactory.bizException("S_ISSUE_ALREADY_BANKER", "已经是庄家");
-        }
-
         this.banker = new Banker(player, bankerType);
         updateTop(banker);
     }
