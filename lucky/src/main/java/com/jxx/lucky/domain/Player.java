@@ -15,6 +15,7 @@ public class Player {
     List<Bet> bets;
     Integer money;
     Integer bonus;
+    Integer tax;
 
     public Player() {
         bets = new ArrayList<>();
@@ -50,7 +51,7 @@ public class Player {
             }
         }
 
-        int tax = BigDecimal.valueOf(totalWin).multiply(GameConstant.TAX).intValue();
+        tax = BigDecimal.valueOf(totalWin).multiply(GameConstant.TAX).intValue();
         bonus += totalWin + totalBet - totalLose - tax;
         return tax;
     }

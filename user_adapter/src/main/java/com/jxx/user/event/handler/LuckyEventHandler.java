@@ -7,6 +7,7 @@ import com.jxx.lucky.event.OffedBankerEvent;
 import com.jxx.user.enums.MoneyChangeTypeEnum;
 import com.jxx.user.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -30,14 +31,14 @@ public class LuckyEventHandler {
     public void handleOffedBankerEvent(OffedBankerEvent offedBankerEvent) {
         userService.changeMoney(
                 offedBankerEvent.getPlayerId(),
-                offedBankerEvent.getResult(), MoneyChangeTypeEnum.OFF_BANKER);
+                offedBankerEvent.getMoney(), MoneyChangeTypeEnum.OFF_BANKER);
     }
 
     public void handleIssueOpenedEvent(IssueOpenedEvent issueOpenedEvent) {
         // 处理下注结果
         Map<Long, Integer> bonusMap = issueOpenedEvent.getResult();
         bonusMap.forEach((playerId, bonus) -> {
-            if (bonus.compareTo(0) > 0) {
+            if (!bonus.equals(0)) {
                 userService.changeMoney(playerId, bonus, MoneyChangeTypeEnum.GAME);
             }
         });

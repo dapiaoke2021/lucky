@@ -19,29 +19,17 @@ import org.springframework.stereotype.Component;
 @Service
 @RefreshScope
 public class UserServiceApiImpl implements IUserServiceApi {
-    @Value("${robot-min-id}")
-    private Long robotMinId;
-
-    @Value("${robot-max-id}")
-    private Long robotMaxId;
 
     @Autowired
-    UserMapper userMapper;
+    IUserService userService;
 
     @Override
     public UserVO getById(Long id) {
-        UserDO userDO = userMapper.selectById(id);
-        UserVO userVO = new UserVO();
-        userVO.setId(id);
-        userVO.setUpper(userDO.getUpper());
-        userVO.setMoney(userDO.getMoney());
-        return userVO;
+        return userService.getUser(id);
     }
 
     @Override
     public UserVO getRobot(Integer money) {
-        UserVO userVO = getById(RandomUtil.randomLong(robotMinId, robotMaxId));
-        userVO.setMoney(money);
-        return userVO;
+        return userService.getRobot(money);
     }
 }

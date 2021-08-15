@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class BetEvent {
-    private Long playerId;
-    private Integer betAmount;
+public class CreatedIssueEvent {
+    private String issueNo;
 }

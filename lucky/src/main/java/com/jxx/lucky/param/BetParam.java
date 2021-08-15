@@ -4,7 +4,9 @@ package com.jxx.lucky.param;
 import com.jxx.lucky.domain.BetTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 @Data
 public class BetParam {
     BetTypeEnum betType;

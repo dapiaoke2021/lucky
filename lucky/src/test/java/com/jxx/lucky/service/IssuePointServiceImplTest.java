@@ -4,6 +4,9 @@ import cn.hutool.core.date.DateUtil;
 import com.alibaba.cola.exception.BizException;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import com.jxx.lucky.component.LuckyEventSource;
+import com.jxx.lucky.config.IssueGameConfig;
+import com.jxx.lucky.config.IssueGameProperty;
 import com.jxx.lucky.domain.*;
 import com.jxx.lucky.domain.nn.IssueNN;
 import com.jxx.lucky.dos.BankerRecordDO;
@@ -20,6 +23,8 @@ import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -49,6 +54,9 @@ public class IssuePointServiceImplTest {
     @Mock
     IUserServiceApi userServiceApi;
 
+    @Mock
+    LuckyEventSource luckyEventSource;
+
     @Captor
     ArgumentCaptor<BankerRecordDO> bankRecordCaptor;
 
@@ -70,15 +78,35 @@ public class IssuePointServiceImplTest {
         ReflectionTestUtils.setField(issueService, "bankerMinMoney", 1000);
         ReflectionTestUtils.setField(issueService, "userService", userServiceApi);
         issueNo = DateUtil.format(DateUtil.date(), "MMddHHmm");
-        ReflectionTestUtils.setField(
-                issueService,
-                "gameConfigs",
+
+        IssueGameProperty issueGameProperty = new IssueGameProperty();
+        issueGameProperty.setGameConfig(
                 Arrays.asList(
                         new GameConfig(BankerTypeEnum.NN, "com.jxx.lucky.domain.NNGame"),
                         new GameConfig(BankerTypeEnum.SN, "com.jxx.lucky.domain.PointGame")
                 )
         );
-        issueService.initGame();
+        ReflectionTestUtils.setField(
+                issueService,
+                "gameConfig",
+                issueGameProperty
+        );
+        ReflectionTestUtils.setField(
+                issueService,
+                "luckyEventSource",
+                luckyEventSource
+        );
+        Mockito.when(luckyEventSource.luckyOutput()).thenReturn(new MessageChannel() {
+            @Override
+            public boolean send(Message<?> message, long l) {
+                return false;
+            }
+        });
+        IssueNN currentIssue =(IssueNN) ReflectionTestUtils.getField(issueService, "currentIssue");
+        currentIssue.buildIssue(Arrays.asList(
+                new GameConfig(BankerTypeEnum.NN, "com.jxx.lucky.domain.NNGame"),
+                new GameConfig(BankerTypeEnum.SN, "com.jxx.lucky.domain.PointGame")
+        ));
         issueService.initBankerQueue();
     }
 
