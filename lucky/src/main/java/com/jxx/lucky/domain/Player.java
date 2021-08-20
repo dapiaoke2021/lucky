@@ -20,6 +20,7 @@ public class Player {
     public Player() {
         bets = new ArrayList<>();
         bonus = 0;
+        tax = 0;
     }
 
     public void bet(Integer money, BetTypeEnum type, String betNo){
@@ -51,9 +52,11 @@ public class Player {
             }
         }
 
-        tax = BigDecimal.valueOf(totalWin).multiply(GameConstant.TAX).intValue();
+        // 一个玩家会出现在多个游戏
+        int tax = BigDecimal.valueOf(totalWin).multiply(GameConstant.TAX).intValue();
         bonus += totalWin + totalBet - totalLose - tax;
-        return tax;
+        this.tax += tax;
+        return this.tax;
     }
 
     @Override

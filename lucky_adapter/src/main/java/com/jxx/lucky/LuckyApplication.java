@@ -1,5 +1,6 @@
 package com.jxx.lucky;
 
+import com.jxx.lucky.component.LuckyConsumerInput;
 import com.jxx.lucky.component.LuckyEventSource;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -14,7 +15,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @ComponentScan(basePackages = {"com.jxx.common", "com.jxx.lucky"})
 @MapperScan("com.jxx.lucky.mapper")
-@EnableBinding(LuckyEventSource.class)
+@EnableBinding({LuckyEventSource.class, LuckyConsumerInput.class})
+
 public class LuckyApplication {
     public static void main(String[] args) {
         SpringApplication.run(LuckyApplication.class, args);

@@ -8,6 +8,7 @@ import com.jxx.auth.component.AuthEventSource;
 import com.jxx.auth.dos.AccountDO;
 import com.jxx.auth.dto.Account;
 import com.jxx.auth.dto.Role;
+import com.jxx.auth.event.CreatedAccountEvent;
 import com.jxx.auth.mapper.AccountMapper;
 import com.jxx.auth.service.IAccountService;
 import com.jxx.auth.service.IValidationCodeService;
@@ -15,11 +16,13 @@ import com.jxx.auth.utils.JwtUtil;
 import com.jxx.auth.vo.AccountVO;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.rocketmq.common.message.MessageConst;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
@@ -73,6 +76,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
         save(accountDO);
 
         Account account = new Account();
+        account.setRole(new Role("user"));
         BeanUtils.copyProperties(accountDO, account);
         return account;
     }
@@ -83,9 +87,11 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
         accountDO.setPhone(phone);
         accountDO.setCreateTime(new Timestamp(System.currentTimeMillis()));
         accountDO.setLastLoginTime(new Timestamp(System.currentTimeMillis()));
+        accountDO.setRoleName("user");
         save(accountDO);
 
         Account account = new Account();
+        account.setRole(new Role("user"));
         BeanUtils.copyProperties(accountDO, account);
         return account;
     }
@@ -99,6 +105,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
         save(accountDO);
 
         Account account = new Account();
+        account.setRole(new Role("user"));
         BeanUtils.copyProperties(accountDO, account);
         return account;
     }
@@ -195,11 +202,19 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
         AccountVO accountVO = new AccountVO();
         accountVO.setId(accountDO.getId());
         accountVO.setRoleName(accountDO.getRoleName() == null ? "user" : accountDO.getRoleName());
-        authEventSource.authOutput().send(MessageBuilder.withPayload(accountVO).build());
+        sendMessage(new CreatedAccountEvent(accountVO), "CreatedAccountEvent");
         return true;
     }
 
     private Role createRoleByName(String roleName) {
         return new Role(roleName);
+    }
+
+    private <T> void sendMessage(T payload, String tag) {
+        Message<T> becameBankerEventMessage = MessageBuilder
+                .withPayload(payload)
+                .setHeader(MessageConst.PROPERTY_TAGS, tag)
+                .build();
+        authEventSource.authOutput().send(becameBankerEventMessage);
     }
 }

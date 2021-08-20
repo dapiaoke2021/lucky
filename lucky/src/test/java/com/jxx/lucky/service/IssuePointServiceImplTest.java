@@ -197,7 +197,7 @@ public class IssuePointServiceImplTest {
         BetRecordDO betRecordDO1 = new BetRecordDO();
         betRecordDO1.setBetNo(betNo);
         betRecordDO1.setIssueNo(issueNo);
-        betRecordDO1.setBetType(BetTypeEnum.BET_1);
+        betRecordDO1.setBetType(BetTypeEnum.BET_1.ordinal());
         betRecordDO1.setMoney(100);
         betRecordDO1.setPlayerId(3L);
         betRecordDO1.setState(BetStateEnum.ONGOING);
@@ -206,7 +206,7 @@ public class IssuePointServiceImplTest {
         BetRecordDO betRecordDO2 = new BetRecordDO();
         betRecordDO2.setBetNo(betNo);
         betRecordDO2.setIssueNo(issueNo);
-        betRecordDO2.setBetType(BetTypeEnum.BET_2);
+        betRecordDO2.setBetType(BetTypeEnum.BET_2.ordinal());
         betRecordDO2.setMoney(100);
         betRecordDO2.setPlayerId(3L);
         betRecordDO2.setState(BetStateEnum.ONGOING);

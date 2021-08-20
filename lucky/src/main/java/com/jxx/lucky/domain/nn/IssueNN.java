@@ -9,6 +9,7 @@ import lombok.Synchronized;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 public class IssueNN extends Issue {
@@ -65,6 +66,12 @@ public class IssueNN extends Issue {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
+    public Map<BetTypeEnum, Integer> getBetMap() {
+        return gameMap.values().stream().map(Game::getBetMap)
+                .flatMap(map -> map.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
     @Override
     public void open(String[] points) {
         gameMap.forEach((bankerType, game) -> game.open(points));
@@ -92,9 +99,11 @@ public class IssueNN extends Issue {
     }
 
     public Map<Long, Player> getPlayerMap() {
-        return gameMap.values().stream().map(Game::getPlayers)
+        Map<Long, Player> playerMap = new HashMap<>();
+        gameMap.values().stream().map(Game::getPlayers)
                 .flatMap(Collection::stream)
-                .collect(Collectors.toMap(Player::getId, Function.identity()));
+                .forEach(player -> playerMap.putIfAbsent(player.getId(), player));
+        return playerMap;
     }
 
     private BankerTypeEnum getBankTypeFromBetType(BetTypeEnum betType) {

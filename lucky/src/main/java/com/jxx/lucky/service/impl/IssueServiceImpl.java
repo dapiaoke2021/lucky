@@ -118,7 +118,7 @@ public class IssueServiceImpl implements IssueService {
         String betNo = playerId.toString() + "-" + DateUtil.format(DateUtil.date(), "yyyyMMddHHmmss");
         for (BetParam bet : bets) {
             BetRecordDO betRecordDO = new BetRecordDO();
-            betRecordDO.setBetType(bet.getBetType());
+            betRecordDO.setBetType(bet.getBetType().ordinal());
             betRecordDO.setIssueNo(currentIssue.getIssueNo());
             betRecordDO.setMoney(bet.getAmount());
             betRecordDO.setPlayerId(playerId);
@@ -168,18 +168,19 @@ public class IssueServiceImpl implements IssueService {
     }
 
     private void becomeBanker(Player player, BankerTypeEnum bankerType,  IssueNN issue) {
-        log.debug("bankerType {}", bankerType);
+        log.debug("上庄: player={}, bankerType={} issueNo={}", player, bankerType, issue.getIssueNo());
         // 已有人上庄则进入上庄队列
         Banker currentBanker = issue.getBanker(bankerType);
         if (currentBanker != null) {
             bankerQueueMap.get(bankerType).add(player);
-
+            log.debug("进入等待队列：player={}, bankerType={}", player, bankerType);
             sendMessage(
                     new WaitBecomeBankerEvent(bankerType.name(), player.getMoney(), player.getId()),
                     "WaitBecomeBankerEvent");
 
             // 如果当前是机器人上庄，则随机2-5期下庄
             if(robotService.isRobot(currentBanker.getUserId())) {
+                log.debug("机器人准备下庄：{}", currentBanker);
                 robotService.prepareOff(currentBanker.getUserId());
             }
             return;
@@ -194,8 +195,6 @@ public class IssueServiceImpl implements IssueService {
         bankerRecordMapper.insert(bankerRecordDO);
 
         issue.becomeBanker(bankerType, player);
-
-
     }
 
     private <T> void sendMessage(T payload, String tag) {

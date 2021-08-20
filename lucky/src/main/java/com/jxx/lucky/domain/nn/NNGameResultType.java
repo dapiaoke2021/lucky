@@ -16,7 +16,7 @@ public class NNGameResultType extends ResultType implements Comparable<NNGameRes
         this.odds = getOdds(this.niu);
     }
 
-    protected Integer getOdds(NiuEnum niuEnum) {
+    private Integer getOdds(NiuEnum niuEnum) {
         switch (niuEnum) {
             case NIL:
             case NIU_1:
@@ -39,7 +39,7 @@ public class NNGameResultType extends ResultType implements Comparable<NNGameRes
         }
     }
 
-    private NiuEnum getNiu(String points) {
+    protected NiuEnum getNiu(String points) {
         Integer[] cards = new Integer[5];
         cards[0] = Integer.valueOf(String.valueOf(points.charAt(points.length() - 1)));
         cards[1] = Integer.valueOf(String.valueOf(points.charAt(points.length() - 2)));
@@ -82,7 +82,7 @@ public class NNGameResultType extends ResultType implements Comparable<NNGameRes
         }
     }
 
-    private Integer getMaxPoint(String points) {
+    protected Integer getMaxPoint(String points) {
         int maxPoint = 0;
         maxPoint = Math.max(Integer.parseInt(String.valueOf(points.charAt(points.length() - 1))), maxPoint);
         maxPoint = Math.max(Integer.parseInt(String.valueOf(points.charAt(points.length() - 2))), maxPoint);

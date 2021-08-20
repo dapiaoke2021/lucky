@@ -1,5 +1,6 @@
 package com.jxx.user.component;
 
+import com.jxx.auth.event.CreatedAccountEvent;
 import com.jxx.auth.vo.AccountVO;
 import com.jxx.lucky.event.BecameBankerEvent;
 import com.jxx.lucky.event.BetEvent;
@@ -22,33 +23,33 @@ public class UserConsumer {
     @Autowired
     LuckyEventHandler luckyEventHandler;
 
-    @StreamListener(value = "user-input", condition = "headers['rocketmq_TAGS'] == 'AccountVO'")
-    public void onMessage(@Payload AccountVO accountVO) {
-        log.info("[onMessage][线程编号:{} 消息内容：{}]", Thread.currentThread().getId(), accountVO);
-        userService.createUser(accountVO.getId());
+    @StreamListener(value = "user-input", condition = "headers['rocketmq_TAGS'] == 'CreatedAccountEvent'")
+    public void onMessage(@Payload CreatedAccountEvent createdAccountEvent) {
+        log.debug("[onMessage][线程编号:{} 消息内容：{}]", Thread.currentThread().getId(), createdAccountEvent);
+        userService.createUser(createdAccountEvent.getAccountVO().getId());
     }
 
     @StreamListener(value = "user-input", condition = "headers['rocketmq_TAGS'] == 'BetEvent'")
     public void onMessage(@Payload BetEvent betEvent) {
-        log.info("[onMessage][线程编号:{} 消息内容：{}]", Thread.currentThread().getId(), betEvent);
+        log.debug("[onMessage][线程编号:{} 消息内容：{}]", Thread.currentThread().getId(), betEvent);
         luckyEventHandler.handleBetEvent(betEvent);
     }
 
     @StreamListener(value = "user-input", condition = "headers['rocketmq_TAGS'] == 'BecameBankerEvent'")
     public void onMessage(@Payload BecameBankerEvent becameBankerEvent) {
-        log.info("[onMessage][线程编号:{} 消息内容：{}]", Thread.currentThread().getId(), becameBankerEvent);
+        log.debug("[onMessage][线程编号:{} 消息内容：{}]", Thread.currentThread().getId(), becameBankerEvent);
         luckyEventHandler.handleBecameBankerEvent(becameBankerEvent);
     }
 
     @StreamListener(value = "user-input", condition = "headers['TAGS'] == 'OffedBankerEvent'")
     public void onMessage(@Payload OffedBankerEvent offedBankerEvent) {
-        log.info("[onMessage][线程编号:{} 消息内容：{}]", Thread.currentThread().getId(), offedBankerEvent);
+        log.debug("[onMessage][线程编号:{} 消息内容：{}]", Thread.currentThread().getId(), offedBankerEvent);
         luckyEventHandler.handleOffedBankerEvent(offedBankerEvent);
     }
 
     @StreamListener(value = "user-input", condition = "headers['rocketmq_TAGS'] == 'IssueOpenedEvent'")
     public void onMessage(@Payload IssueOpenedEvent issueOpenedEvent) {
-        log.info("[onMessage][线程编号:{} 消息内容：{}]", Thread.currentThread().getId(), issueOpenedEvent);
+        log.debug("[onMessage][线程编号:{} 消息内容：{}]", Thread.currentThread().getId(), issueOpenedEvent);
         luckyEventHandler.handleIssueOpenedEvent(issueOpenedEvent);
     }
 }

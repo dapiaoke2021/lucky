@@ -26,7 +26,7 @@ public class IssueGameConfig {
     public IssueGameProperty newEthGameConfig() {
         IssueGameProperty ethGameConfig = new IssueGameProperty();
         ethGameConfig.setGameConfig(Arrays.asList(
-                new GameConfig(BankerTypeEnum.NN, "com.jxx.lucky.domain.NNGame"),
+                new GameConfig(BankerTypeEnum.NN, "com.jxx.lucky.domain.NNGame2"),
                 new GameConfig(BankerTypeEnum.DUI, "com.jxx.lucky.domain.DuiziGame")
         ));
         return ethGameConfig;
