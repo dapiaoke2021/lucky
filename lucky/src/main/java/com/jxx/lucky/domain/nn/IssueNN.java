@@ -50,7 +50,7 @@ public class IssueNN extends Issue {
     public void becomeBanker(BankerTypeEnum bankerType, Player player) {
         Game game = gameMap.get(bankerType);
         if (game == null) {
-            throw ExceptionFactory.bizException("S_ISSUE_BANKER_TYPE_ERROR","庄家类型错误");
+            throw ExceptionFactory.bizException("S_ISSUE_BANKER_TYPE_ERROR","庄家类型错误:" + bankerType);
         }
 
         game.becomeBanker(player);

@@ -43,3 +43,4 @@ mybatis:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 mybatis-plus:
   type-enums-package: com.jxx.lucky*
+point-source: ${POINT_SOURCE}

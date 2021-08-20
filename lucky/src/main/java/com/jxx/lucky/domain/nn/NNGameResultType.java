@@ -2,13 +2,17 @@ package com.jxx.lucky.domain.nn;
 
 import com.jxx.lucky.domain.ResultType;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
+@NoArgsConstructor
 @Data
 public class NNGameResultType extends ResultType implements Comparable<NNGameResultType> {
     protected NiuEnum niu;
     Integer maxPoint;
+
+
 
     public NNGameResultType(String point) {
         this.niu = getNiu(point);

@@ -7,15 +7,10 @@ import lombok.Data;
 @Data
 public class NNPointGameResultType extends NNGameResultType {
 
-    public NNPointGameResultType() {
-        super("");
-    }
-
     public NNPointGameResultType(String point) {
         super(point);
     }
 
-    @Override
     protected Integer getOdds(NiuEnum niuEnum) {
         return 10;
     }
