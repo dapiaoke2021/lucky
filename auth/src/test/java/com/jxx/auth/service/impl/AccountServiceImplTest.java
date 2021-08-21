@@ -1,7 +1,6 @@
 package com.jxx.auth.service.impl;
 
 import com.alibaba.cola.exception.BizException;
-import com.jxx.auth.component.AuthEventSource;
 import com.jxx.auth.dos.AccountDO;
 import com.jxx.auth.dto.Account;
 import com.jxx.auth.mapper.AccountMapper;
@@ -9,16 +8,13 @@ import com.jxx.auth.service.IAccountService;
 import com.jxx.auth.service.IValidationCodeService;
 import com.jxx.auth.utils.JwtUtil;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.event.annotation.BeforeTestClass;
-import org.springframework.test.context.event.annotation.PrepareTestInstance;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -37,9 +33,9 @@ public class AccountServiceImplTest {
     IAccountService accountService;
 
     @Mock
-    AuthEventSource authEventSource;
+    ApplicationEventPublisher authEventSource;
 
-    JwtUtil jwtUtil = new JwtUtil();
+    JwtUtil jwtUtil = new JwtUtil("dGhpcyBpcyBhIGV4YW1wbGU");
 
     @BeforeEach
     public void initMock() {

@@ -10,12 +10,14 @@ import com.jxx.user.mapper.MoneyChangeMapper;
 import com.jxx.user.mapper.UserMapper;
 import com.jxx.user.service.IUserService;
 import com.jxx.user.vo.UserVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
@@ -23,6 +25,7 @@ import java.sql.Timestamp;
 /**
  * @author a1
  */
+@Slf4j
 @Service
 public class UserServiceImpl implements IUserService {
 

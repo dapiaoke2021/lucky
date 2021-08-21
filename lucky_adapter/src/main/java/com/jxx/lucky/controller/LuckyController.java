@@ -100,6 +100,9 @@ public class LuckyController {
                 .eq(BetRecordDO::getPlayerId, playerId)
                 .orderByDesc(BetRecordDO::getCreateTime);
         Page<BetRecordDO> betRecordPage = betMapper.selectPage(page, listQueryWrapper);
+        if (betRecordPage.getRecords().isEmpty()) {
+            return PageResponse.buildSuccess();
+        }
 
         Map<String, BetVO> betVOMap = new HashMap<>();
         QueryWrapper<BetRecordDO> listQueryWrapper1 = new QueryWrapper<>();

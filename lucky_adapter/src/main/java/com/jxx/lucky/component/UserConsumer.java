@@ -1,4 +1,4 @@
-package com.jxx.user.event.handler;
+package com.jxx.lucky.component;
 
 import com.jxx.lucky.event.BecameBankerEvent;
 import com.jxx.lucky.event.BetEvent;
@@ -6,6 +6,7 @@ import com.jxx.lucky.event.IssueOpenedEvent;
 import com.jxx.lucky.event.OffedBankerEvent;
 import com.jxx.user.enums.MoneyChangeTypeEnum;
 import com.jxx.user.service.IUserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -13,8 +14,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+@Slf4j
 @Component
-public class LuckyEventHandler {
+public class UserConsumer {
+
     @Autowired
     IUserService userService;
 
@@ -60,4 +63,5 @@ public class LuckyEventHandler {
             }
         });
     }
+
 }

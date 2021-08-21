@@ -3,8 +3,6 @@ package com.jxx.auth.service.impl;
 import com.alibaba.cola.exception.ExceptionFactory;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
-import com.jxx.auth.component.AuthEventSource;
 import com.jxx.auth.dos.AccountDO;
 import com.jxx.auth.dto.Account;
 import com.jxx.auth.dto.Role;
@@ -16,18 +14,17 @@ import com.jxx.auth.utils.JwtUtil;
 import com.jxx.auth.vo.AccountVO;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.rocketmq.common.message.MessageConst;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +32,7 @@ import java.util.Map;
 /**
  * @author jxx
  */
+@Slf4j
 @Service
 @RefreshScope
 @ConfigurationProperties(prefix = "role")
@@ -48,7 +46,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
     JwtUtil jwtUtil;
     AntPathMatcher antPathMatcher;
     AccountMapper accountMapper;
-    AuthEventSource authEventSource;
+    ApplicationEventPublisher applicationEventPublisher;
 
     public AccountServiceImpl() {
         antPathMatcher = new AntPathMatcher();
@@ -57,12 +55,12 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
     @Autowired
     public AccountServiceImpl(
             IValidationCodeService validationCodeService, AccountMapper accountMapper,
-            JwtUtil jwtUtil, AuthEventSource authEventSource) {
+            JwtUtil jwtUtil, ApplicationEventPublisher applicationEventPublisher) {
         this();
         this.validationCodeService = validationCodeService;
         this.accountMapper = accountMapper;
         this.jwtUtil = jwtUtil;
-        this.authEventSource = authEventSource;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -211,10 +209,6 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
     }
 
     private <T> void sendMessage(T payload, String tag) {
-        Message<T> becameBankerEventMessage = MessageBuilder
-                .withPayload(payload)
-                .setHeader(MessageConst.PROPERTY_TAGS, tag)
-                .build();
-        authEventSource.authOutput().send(becameBankerEventMessage);
+        applicationEventPublisher.publishEvent(payload);
     }
 }

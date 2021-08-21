@@ -6,12 +6,12 @@ import com.jxx.lucky.domain.Player;
 import com.jxx.lucky.domain.Robot;
 import com.jxx.lucky.service.IssueService;
 import com.jxx.lucky.service.RobotService;
-import com.jxx.user.service.IUserServiceApi;
+import com.jxx.user.service.IUserService;
 import com.jxx.user.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.dubbo.config.annotation.Reference;
-import org.apache.dubbo.config.annotation.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,8 +22,8 @@ public class RobotServiceImpl implements RobotService {
 
     private IssueService issueService;
 
-    @Reference
-    IUserServiceApi userService;
+    @Autowired
+    IUserService userService;
 
     @Value("${robot-min-money}")
     private Integer robotMinMoney;
@@ -55,6 +55,7 @@ public class RobotServiceImpl implements RobotService {
 
     @Override
     public boolean isRobot(Long playerId) {
+        log.debug("是否为机器人：playerId = {}, inGameRobotMap={}", playerId, inGameRobotMap);
         return inGameRobotMap.containsKey(playerId);
     }
 
@@ -91,6 +92,7 @@ public class RobotServiceImpl implements RobotService {
         robot.setBankerType(bankerType);
         robot.setId(playerId);
         inGameRobotMap.put(playerId, robot);
+        log.debug("成功庄家消息：inGameRobotMap={}", inGameRobotMap);
     }
 
     @Override

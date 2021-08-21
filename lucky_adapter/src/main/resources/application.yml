@@ -9,33 +9,6 @@ spring:
   redis:
     host: ${REDIS_HOST}
     password: ${REDIS_PASSWORD}
-  cloud:
-    stream:
-      # Binding 配置项，对应 BindingProperties Map
-      bindings:
-        lucky-output:
-          destination: lucky # 目的地。这里使用 RocketMQ Topic
-          content-type: application/json # 内容格式。这里使用 JSON
-        lucky-input:
-          destination: lucky # 目的地。这里使用 RocketMQ Topic
-          content-type: application/json # 内容格式。这里使用 JSON
-          group: lucky-lucky # 消费者分组
-      # Spring Cloud Stream RocketMQ 配置项
-      rocketmq:
-        # RocketMQ Binder 配置项，对应 RocketMQBinderConfigurationProperties 类
-        binder:
-          name-server: ${ROCKET_MQ_NAME_SERVER} # RocketMQ Namesrv 地址
-        # RocketMQ 自定义 Binding 配置项，对应 RocketMQBindingProperties Map
-        bindings:
-          lucky-input:
-            # RocketMQ Consumer 配置项，对应 RocketMQConsumerProperties 类
-            consumer:
-              enabled: true # 是否开启消费，默认为 true
-              broadcasting: false # 是否使用广播消费，默认为 false 使用集群消费
-          lucky-output:
-            # RocketMQ Producer 配置项，对应 RocketMQProducerProperties 类
-            producer:
-              group: lucky # 生产者分组
 mybatis:
   mapper-locations: classpath:mapper/*Mapper.xml
   type-aliases-package: com.jxx.lucky.dos

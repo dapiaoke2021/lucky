@@ -7,10 +7,7 @@ import com.jxx.auth.service.IAuthApi;
 import com.jxx.auth.vo.AccountVO;
 import com.jxx.auth.vo.AuthCheckResultVO;
 import com.jxx.gate.config.IgnoreUrls;
-import com.jxx.gate.config.IgnoreUrlsConfig;
-import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -35,7 +32,7 @@ import java.util.List;
 @Component
 public class AuthGlobalFilter implements WebFilter {
 
-    @Reference
+    @Autowired
     IAuthApi authApi;
 
     @Autowired
@@ -94,4 +91,6 @@ public class AuthGlobalFilter implements WebFilter {
         }
         return false;
     }
+
+
 }

@@ -3,7 +3,6 @@ package com.jxx.lucky.service.impl;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.cola.exception.ExceptionFactory;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.jxx.lucky.component.LuckyEventSource;
 import com.jxx.lucky.config.IssueGameProperty;
 import com.jxx.lucky.domain.*;
 import com.jxx.lucky.domain.nn.IssueNN;
@@ -17,17 +16,13 @@ import com.jxx.lucky.mapper.IssueMapper;
 import com.jxx.lucky.param.BetParam;
 import com.jxx.lucky.service.IssueService;
 import com.jxx.lucky.service.RobotService;
+import com.jxx.user.service.IUserService;
 import com.jxx.user.vo.UserVO;
-import com.jxx.user.service.IUserServiceApi;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.dubbo.config.annotation.Reference;
-import org.apache.rocketmq.common.message.MessageConst;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,8 +45,8 @@ public class IssueServiceImpl implements IssueService {
 
     private final RobotService robotService;
 
-    @Reference
-    IUserServiceApi userService;
+    @Autowired
+    IUserService userService;
 
     BetMapper betMapper;
     IssueMapper issueMapper;
@@ -68,7 +63,7 @@ public class IssueServiceImpl implements IssueService {
     IssueGameProperty gameConfig;
 
     @Autowired
-    LuckyEventSource luckyEventSource;
+    ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
     public IssueServiceImpl(BetMapper betMapper,
@@ -99,7 +94,12 @@ public class IssueServiceImpl implements IssueService {
         currentIssue.buildIssue(gameConfig.getGameConfig());
 
         gameConfig.getGameConfig().forEach(gameConfig -> {
+            Player robot = robotService.createRobot();
             currentIssue.becomeBanker(gameConfig.getBankType(), robotService.createRobot());
+            log.debug("发送消息成为庄家消息");
+            applicationEventPublisher.publishEvent(
+                    new BecameBankerEvent(gameConfig.getBankType().name(), robot.getMoney(), robot.getId())
+            );
         });
     }
 
@@ -129,7 +129,7 @@ public class IssueServiceImpl implements IssueService {
         currentIssue.bet(player, bets, betNo);
 
         Integer totalBetAmount = bets.stream().reduce(0, (sum, bet) -> sum + bet.getAmount(), Integer::sum);
-        sendMessage(new BetEvent(playerId, totalBetAmount), "BetEvent");
+        applicationEventPublisher.publishEvent(new BetEvent(playerId, totalBetAmount));
         return betNo;
     }
 
@@ -161,9 +161,8 @@ public class IssueServiceImpl implements IssueService {
         player.setMoney(money);
         becomeBanker(player, bankerType, currentIssue);
 
-        sendMessage(
-                new BecameBankerEvent(bankerType.name(), player.getMoney(), player.getId()),
-                "BecameBankerEvent"
+        applicationEventPublisher.publishEvent(
+                new BecameBankerEvent(bankerType.name(), player.getMoney(), player.getId())
         );
     }
 
@@ -174,9 +173,9 @@ public class IssueServiceImpl implements IssueService {
         if (currentBanker != null) {
             bankerQueueMap.get(bankerType).add(player);
             log.debug("进入等待队列：player={}, bankerType={}", player, bankerType);
-            sendMessage(
-                    new WaitBecomeBankerEvent(bankerType.name(), player.getMoney(), player.getId()),
-                    "WaitBecomeBankerEvent");
+            applicationEventPublisher.publishEvent(
+                    new WaitBecomeBankerEvent(bankerType.name(), player.getMoney(), player.getId())
+            );
 
             // 如果当前是机器人上庄，则随机2-5期下庄
             if(robotService.isRobot(currentBanker.getUserId())) {
@@ -198,11 +197,7 @@ public class IssueServiceImpl implements IssueService {
     }
 
     private <T> void sendMessage(T payload, String tag) {
-        Message<T> becameBankerEventMessage = MessageBuilder
-                .withPayload(payload)
-                .setHeader(MessageConst.PROPERTY_TAGS, tag)
-                .build();
-        luckyEventSource.luckyOutput().send(becameBankerEventMessage);
+        applicationEventPublisher.publishEvent(payload);
     }
 
     @Override
@@ -230,7 +225,7 @@ public class IssueServiceImpl implements IssueService {
         player.setId(playerId);
         bankerQueueMap.get(bankerType).remove(player);
 
-        sendMessage(new OffedBankerEvent(player.getId(), currentBanker.getMoney()), "OffedBankerEvent");
+        applicationEventPublisher.publishEvent(new OffedBankerEvent(player.getId(), currentBanker.getMoney()));
     }
 
     @Override
@@ -244,7 +239,7 @@ public class IssueServiceImpl implements IssueService {
             result.put(playerId, player.getBonus());
             tax.put(playerId, player.getTax());
         });
-        sendMessage(new IssueOpenedEvent(currentIssue.getIssueNo(), points, result, tax), "IssueOpenedEvent");
+        applicationEventPublisher.publishEvent(new IssueOpenedEvent(currentIssue.getIssueNo(), points, result, tax));
         newIssue();
     }
 
@@ -262,20 +257,19 @@ public class IssueServiceImpl implements IssueService {
             // 主动下庄或钱不够下庄 topBet + result 是下一期续庄的分
             Integer nextIssueTopBet = currentBanker.getResult() + currentBanker.getMoney();
             if (isOff || nextIssueTopBet.compareTo(bankerMinMoney) < 0) {
-                sendMessage(new OffedBankerEvent(currentBanker.getUserId(), currentBanker.getMoney()), "OffedBankerEvent");
+                applicationEventPublisher.publishEvent(
+                        new OffedBankerEvent(currentBanker.getUserId(), currentBanker.getMoney()));
                 Player player = bankerQueueMap.get(bankerType).poll();
                 if (player != null) {
                     becomeBanker(player, bankerType, nextIssue);
-                    sendMessage(
-                            new BecameBankerEvent(bankerType.name(), player.getMoney(), player.getId()),
-                            "BecameBankerEvent"
+                    applicationEventPublisher.publishEvent(
+                            new BecameBankerEvent(bankerType.name(), player.getMoney(), player.getId())
                     );
                 } else {
                     Player robot = robotService.createRobot();
                     becomeBanker(robot, bankerType, nextIssue);
-                    sendMessage(
-                            new BecameBankerEvent(bankerType.name(), robot.getMoney(), robot.getId()),
-                            "BecameBankerEvent"
+                    applicationEventPublisher.publishEvent(
+                            new BecameBankerEvent(bankerType.name(), robot.getMoney(), robot.getId())
                     );
                 }
             } else {
@@ -294,7 +288,9 @@ public class IssueServiceImpl implements IssueService {
         issueDO.setState(IssueStateEnum.BETTING);
         issueMapper.insert(issueDO);
 
-        sendMessage(new CreatedIssueEvent(nextIssue.getIssueNo()), "CreatedIssueEvent");
+        applicationEventPublisher.publishEvent(
+                new CreatedIssueEvent(nextIssue.getIssueNo())
+        );
     }
 
     @Override
@@ -367,7 +363,7 @@ public class IssueServiceImpl implements IssueService {
     private Player getPlayer(Long id) {
         Player player = currentIssue.getPlayerMap().get(id);
         if (player == null) {
-            UserVO userVO = userService.getById(id);
+            UserVO userVO = userService.getUser(id);
             player = new Player();
             player.setId(userVO.getId());
             player.setMoney(userVO.getMoney());
