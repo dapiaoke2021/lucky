@@ -192,6 +192,14 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountDO> im
     }
 
     @Override
+    public AccountVO accountById(Long userId) {
+        AccountDO accountDO = accountMapper.selectById(userId);
+        AccountVO accountVO = new AccountVO();
+        BeanUtils.copyProperties(accountDO, accountVO);
+        return accountVO;
+    }
+
+    @Override
     public boolean save(AccountDO accountDO) {
         if (accountMapper.insert(accountDO) != 1) {
             throw ExceptionFactory.sysException("保存失败");

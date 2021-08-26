@@ -8,4 +8,6 @@ import java.io.Serializable;
 public class AccountVO  implements Serializable {
     private Long id;
     private String roleName;
+    private String username;
+    private String phone;
 }

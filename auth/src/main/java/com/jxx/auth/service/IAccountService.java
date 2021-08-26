@@ -3,6 +3,7 @@ package com.jxx.auth.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jxx.auth.dos.AccountDO;
 import com.jxx.auth.dto.Account;
+import com.jxx.auth.vo.AccountVO;
 
 /**
  * @author a1
@@ -75,4 +76,11 @@ public interface IAccountService extends IService<AccountDO> {
      * @return 鉴权结果
      */
     boolean checkAuthority(String role, String url);
+
+    /**
+     * 根据id查询账户信息
+     * @param userId
+     * @return
+     */
+    AccountVO accountById(Long userId);
 }

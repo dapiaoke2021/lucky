@@ -7,6 +7,8 @@ import com.jxx.auth.param.AuthorityByMd5Param;
 import com.jxx.auth.service.IAccountService;
 import com.jxx.auth.service.IThirdPartyService;
 import com.jxx.auth.service.IValidationCodeService;
+import com.jxx.auth.vo.AccountVO;
+import com.jxx.common.aop.UserId;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -70,5 +72,13 @@ public class AuthController {
         }
 
         return SingleResponse.of(accountService.authByCode(phone, code));
+    }
+
+
+    @UserId
+    @GetMapping("/accountById")
+    public SingleResponse<AccountVO> accountById(Long userId) {
+        log.debug("userId={}", userId);
+        return SingleResponse.of(accountService.accountById(userId));
     }
 }
