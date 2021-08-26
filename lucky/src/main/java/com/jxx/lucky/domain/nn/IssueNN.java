@@ -7,6 +7,9 @@ import lombok.Data;
 import lombok.Synchronized;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 public class IssueNN extends Issue {
@@ -15,93 +18,63 @@ public class IssueNN extends Issue {
      */
     private Integer tax;
 
-    private NNBanker banker;
+    private Map<BankerTypeEnum, Game> gameMap;
 
-    List<BetType> hitBets;
 
     public IssueNN() {
         this.state = IssueStateEnum.BETTING;
-        this.playerMap = new HashMap<>();
+        gameMap = new HashMap<>();
+    }
+
+    public void buildIssue(BankerTypeEnum bankerTypeEnum, Game game) {
+        gameMap.put(bankerTypeEnum, game);
+    }
+
+    public void buildIssue(List<GameConfig> gameConfigs) {
+        gameConfigs.forEach(gameConfig -> {
+            try {
+                Class<?> gameClass = ClassLoader.getSystemClassLoader().loadClass(gameConfig.getGameClass());
+                gameMap.put(gameConfig.getBankType(), (Game) gameClass.newInstance());
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Synchronized
-    public void becomeBanker(Player player){
-        if (banker != null) {
-            throw ExceptionFactory.bizException("S_ISSUE_ALREADY_HAS_BANKER","已有玩家坐庄");
-        }
-
-        if(isBanker(player)) {
-            throw ExceptionFactory.bizException("S_ISSUE_ALREADY_BANKER", "已经是庄家");
-        }
-
-        NNBanker banker = new NNBanker();
-        banker.setUserId(player.getId());
-        banker.setTopBet(player.getMoney());
-        this.banker = banker;
-        this.bankerMap.put(BankerTypeEnum.NN, banker);
-    }
-
-    private boolean isBanker(Player player) {
-        return banker != null && banker.getUserId().equals(player.getId());
-    }
-
-    public void open(String bankerPoint, String xianPoint1, String xianPoint2) {
-        NNGameResultType bankerResult = new NNGameResultType(bankerPoint);
-        NNGameResultType xianResult1 = new NNGameResultType(xianPoint1);
-        NNGameResultType xianResult2 = new NNGameResultType(xianPoint2);
-
-        List<BetTypeResult> bankerBetTypeResults = new ArrayList<>();
-        List<BetTypeResult> playerBetTypeResults = new ArrayList<>();
-        if (bankerResult.compareTo(xianResult1) >= 0) {
-            bankerBetTypeResults.add(new BetTypeResult(BetTypeEnum.BET_1, true, bankerResult));
-            playerBetTypeResults.add(new BetTypeResult(BetTypeEnum.BET_1, false, bankerResult));
-        } else {
-            bankerBetTypeResults.add(new BetTypeResult(BetTypeEnum.BET_1, false, xianResult1));
-            playerBetTypeResults.add(new BetTypeResult(BetTypeEnum.BET_1, true, xianResult1));
-        }
-
-        if (bankerResult.compareTo(xianResult2) >= 0) {
-            bankerBetTypeResults.add(new BetTypeResult(BetTypeEnum.BET_2, true, bankerResult));
-            playerBetTypeResults.add(new BetTypeResult(BetTypeEnum.BET_2, false, bankerResult));
-        } else {
-            bankerBetTypeResults.add(new BetTypeResult(BetTypeEnum.BET_2, false, xianResult2));
-            playerBetTypeResults.add(new BetTypeResult(BetTypeEnum.BET_2, true, xianResult2));
-        }
-
-        bankerMap.forEach((bankerType, banker) -> banker.open(betMap, bankerBetTypeResults));
-        playerMap.forEach((id, player) -> player.open(playerBetTypeResults));
-    }
-
-
     @Override
     public void becomeBanker(BankerTypeEnum bankerType, Player player) {
-        if (!BankerTypeEnum.NN.equals(bankerType)) {
-            throw ExceptionFactory.bizException("S_ISSUE_BANKER_TYPE_ERROR","庄家类型错误");
+        Game game = gameMap.get(bankerType);
+        if (game == null) {
+            throw ExceptionFactory.bizException("S_ISSUE_BANKER_TYPE_ERROR","庄家类型错误:" + bankerType);
         }
 
-        if (bankerMap.get(bankerType) != null) {
-            throw ExceptionFactory.bizException("S_ISSUE_ALREADY_HAS_BANKER","已有玩家坐庄");
-        }
+        game.becomeBanker(player);
+    }
 
-        if(isBanker(player)) {
-            throw ExceptionFactory.bizException("S_ISSUE_ALREADY_BANKER", "已经是庄家");
-        }
+    public Banker getBanker(BankerTypeEnum bankerType) {
+        return gameMap.get(bankerType).getBanker();
+    }
 
-        NNBanker banker = new NNBanker();
-        banker.setUserId(player.getId());
-        banker.setTopBet(player.getMoney()/3);
-        banker.setType(bankerType);
-        bankerMap.put(bankerType, banker);
+    public Map<BetTypeEnum, Integer> getTopBetMap() {
+        return gameMap.values().stream().map(Game::getTopBetMap)
+                .flatMap(map -> map.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    public Map<BetTypeEnum, Integer> getBetMap() {
+        return gameMap.values().stream().map(Game::getBetMap)
+                .flatMap(map -> map.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     @Override
     public void open(String[] points) {
-        open(points[2], points[3], points[4]);
-    }
-
-    @Override
-    public List<BetType> getHitBets() {
-        return hitBets;
+        gameMap.forEach((bankerType, game) -> game.open(points));
     }
 
     @Override
@@ -110,35 +83,33 @@ public class IssueNN extends Issue {
             throw ExceptionFactory.bizException("S_ISSUE_OUT_BET_TIME", "下注时间已过");
         }
 
-        // 检查玩家金额
-        if(!player.check(bets)) {
-            throw ExceptionFactory.bizException("S_PLAYER_NOT_ENOUGH_GOLD", "金额不足");
+        if(bets.stream().anyMatch(bet -> getBankTypeFromBetType(bet.getBetType()) == null)) {
+            throw ExceptionFactory.bizException("S_ISSUE_NO_BANKER", "游戏未配置");
         }
 
-        // 检查庄家是否存在
-        if (banker == null) {
-            throw ExceptionFactory.bizException("S_ISSUE_NO_BANKER", "没有庄家，不能下注");
-        }
-
-        // 检查庄家额度
-        Integer totalBet = bets.stream().reduce(0, (sum, bet) -> sum + bet.getAmount(), Integer::sum);
-        Integer topBet = banker.getTopBet();
-        if (topBet.compareTo(totalBet) < 0) {
-            throw ExceptionFactory.bizException("S_ISSUE_NOT_ENOUGH_TOP_BET", "庄家额度不足");
-        }
-
-        playerMap.putIfAbsent(player.getId(), player);
-        bets.forEach(betParam -> {
-            player.bet(betParam.getAmount(), betParam.getBetType(), betNo);
-        });
-
-        bets.forEach(betParam -> {
-            this.betMap.merge(betParam.getBetType(), betParam.getAmount(), Integer::sum);
+        Map<BankerTypeEnum, List<BetParam>> gameBetsMap
+                = bets.stream().collect(Collectors.groupingBy(bet -> getBankTypeFromBetType(bet.getBetType())));
+        gameBetsMap.keySet().stream().anyMatch(bankerType -> gameMap.get(bankerType) == null);
+        gameBetsMap.forEach((bankerType, gameBets) -> {
+            gameMap.get(bankerType).checkBet(player, gameBets);
+        } );
+        gameBetsMap.forEach((bankerType, gameBets) -> {
+            gameMap.get(bankerType).bet(player, gameBets, betNo);
         });
     }
 
-    @Override
-    public void unBet(Player player, BetTypeEnum type) {
+    public Map<Long, Player> getPlayerMap() {
+        Map<Long, Player> playerMap = new HashMap<>();
+        gameMap.values().stream().map(Game::getPlayers)
+                .flatMap(Collection::stream)
+                .forEach(player -> playerMap.putIfAbsent(player.getId(), player));
+        return playerMap;
+    }
 
+    private BankerTypeEnum getBankTypeFromBetType(BetTypeEnum betType) {
+         Optional<Map.Entry<BankerTypeEnum, Game>> gameEntry = gameMap.entrySet().stream()
+                .filter(bankerTypeGameEntry -> bankerTypeGameEntry.getValue().containBetType(betType))
+                .findAny();
+         return gameEntry.map(Map.Entry::getKey).orElse(null);
     }
 }

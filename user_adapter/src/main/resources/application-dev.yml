@@ -1,3 +1,7 @@
 logging:
   level:
     com.jxx: DEBUG
+    org:
+      springframework:
+        cloud:
+          stream: DEBUG

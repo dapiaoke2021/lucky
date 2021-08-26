@@ -1,5 +1,6 @@
 package com.jxx.user.service.impl;
 
+import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.jxx.user.config.UserConfig;
 import com.jxx.user.dos.MoneyChangeDO;
@@ -9,10 +10,14 @@ import com.jxx.user.mapper.MoneyChangeMapper;
 import com.jxx.user.mapper.UserMapper;
 import com.jxx.user.service.IUserService;
 import com.jxx.user.vo.UserVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
@@ -20,6 +25,7 @@ import java.sql.Timestamp;
 /**
  * @author a1
  */
+@Slf4j
 @Service
 public class UserServiceImpl implements IUserService {
 
@@ -27,9 +33,17 @@ public class UserServiceImpl implements IUserService {
     MoneyChangeMapper moneyChangeMapper;
     UserConfig userConfig;
 
+    @Value("${robot-min-id}")
+    private Long robotMinId;
 
-    public UserServiceImpl(UserMapper userMapper, UserConfig userConfig) {
+    @Value("${robot-max-id}")
+    private Long robotMaxId;
+
+
+    @Autowired
+    public UserServiceImpl(UserMapper userMapper, UserConfig userConfig, MoneyChangeMapper moneyChangeMapper) {
         this.userMapper = userMapper;
+        this.moneyChangeMapper = moneyChangeMapper;
         this.userConfig = userConfig;
     }
 
@@ -92,11 +106,13 @@ public class UserServiceImpl implements IUserService {
         userDOUpdateWrapper.lambda()
                 .setSql("money = money + " + amount)
                 .eq(UserDO::getId, playerId);
+        userMapper.update(null, userDOUpdateWrapper);
 
         MoneyChangeDO moneyChangeDO = new MoneyChangeDO();
         moneyChangeDO.setType(moneyChangeType.getType());
         moneyChangeDO.setDescription(moneyChangeType.getDescription());
         moneyChangeDO.setAmount(amount);
+        moneyChangeDO.setUserId(playerId);
         moneyChangeDO.setCreateTime(new Timestamp(System.currentTimeMillis()));
         moneyChangeMapper.insert(moneyChangeDO);
     }
@@ -113,6 +129,14 @@ public class UserServiceImpl implements IUserService {
         UserDO userDO = userMapper.selectById(id);
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(userDO, userVO);
+        return userVO;
+    }
+
+    @Override
+    public UserVO getRobot(Integer money) {
+        UserVO userVO = new UserVO();
+        userVO.setId(RandomUtil.randomLong(robotMinId, robotMaxId));
+        userVO.setMoney(money);
         return userVO;
     }
 }

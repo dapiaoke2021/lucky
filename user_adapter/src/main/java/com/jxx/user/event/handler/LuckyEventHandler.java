@@ -7,6 +7,8 @@ import com.jxx.lucky.event.OffedBankerEvent;
 import com.jxx.user.enums.MoneyChangeTypeEnum;
 import com.jxx.user.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -16,10 +18,14 @@ public class LuckyEventHandler {
     @Autowired
     IUserService userService;
 
+    @Async
+    @EventListener
     public void handleBetEvent(BetEvent betEvent) {
         userService.changeMoney(betEvent.getPlayerId(), -betEvent.getBetAmount(), MoneyChangeTypeEnum.BET);
     }
 
+    @Async
+    @EventListener
     public void handleBecameBankerEvent(BecameBankerEvent becameBankerEvent) {
         userService.changeMoney(
                 becameBankerEvent.getPlayerId(),
@@ -27,17 +33,21 @@ public class LuckyEventHandler {
                 MoneyChangeTypeEnum.BECOME_BANKER);
     }
 
+    @Async
+    @EventListener
     public void handleOffedBankerEvent(OffedBankerEvent offedBankerEvent) {
         userService.changeMoney(
                 offedBankerEvent.getPlayerId(),
-                offedBankerEvent.getResult(), MoneyChangeTypeEnum.OFF_BANKER);
+                offedBankerEvent.getMoney(), MoneyChangeTypeEnum.OFF_BANKER);
     }
 
+    @Async
+    @EventListener
     public void handleIssueOpenedEvent(IssueOpenedEvent issueOpenedEvent) {
         // 处理下注结果
         Map<Long, Integer> bonusMap = issueOpenedEvent.getResult();
         bonusMap.forEach((playerId, bonus) -> {
-            if (bonus.compareTo(0) > 0) {
+            if (!bonus.equals(0)) {
                 userService.changeMoney(playerId, bonus, MoneyChangeTypeEnum.GAME);
             }
         });

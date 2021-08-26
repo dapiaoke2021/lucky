@@ -61,4 +61,10 @@ management:
   security:
     enabled: false
 
+role:
+  authority:
+    user:
+      - "/user/**"
+      - "/*/lucky/**"
+
 validation-service: ${VALIDATION_SERVICE}

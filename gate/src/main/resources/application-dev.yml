@@ -1,0 +1,4 @@
+# 配置输出日志
+logging:
+  level:
+    com.jxx: DEBUG

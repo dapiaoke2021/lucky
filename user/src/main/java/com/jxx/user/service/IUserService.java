@@ -44,4 +44,9 @@ public interface IUserService {
      * 获取用户信息
      */
     UserVO getUser(Long id);
+
+    /**
+     * 获取机器人
+     */
+    UserVO getRobot(Integer money);
 }

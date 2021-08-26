@@ -27,7 +27,7 @@ public interface RobotService {
     /**
      * 处理上庄事件
      */
-    void handleBecameBankerEvent(BankerTypeEnum bankerType, Player banker);
+    void handleBecameBankerEvent(BankerTypeEnum bankerType, Long playerId);
 
     /**
      * 处理下庄事件

@@ -1,0 +1,6 @@
+game-config:
+  - bankType: NN
+    gameClass: com.jxx.lucky.domain.NNGame
+  - bankerType: SN
+    gameClass: com.jxx.lucky.domain.PointGame
+  point-source: eth

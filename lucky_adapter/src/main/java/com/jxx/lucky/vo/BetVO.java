@@ -5,6 +5,7 @@ import com.jxx.lucky.domain.BetTypeEnum;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.models.auth.In;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.List;
@@ -21,4 +22,16 @@ public class BetVO {
 
     @ApiModelProperty("下注额")
     private Map<BetTypeEnum, Integer> bets;
+
+    @ApiModelProperty("盈亏")
+    private Map<BetTypeEnum, Integer> results;
+
+    @Data
+    @AllArgsConstructor
+    static public class BetItemVO{
+        BetTypeEnum betType;
+        private Integer bet;
+        private Integer result;
+    }
+    List<BetItemVO> betItemVOS;
 }

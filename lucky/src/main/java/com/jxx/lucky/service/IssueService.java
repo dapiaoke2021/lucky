@@ -1,6 +1,6 @@
 package com.jxx.lucky.service;
 
-import com.jxx.lucky.domain.point.PointGameBanker;
+import com.jxx.lucky.domain.Banker;
 import com.jxx.lucky.domain.BankerTypeEnum;
 import com.jxx.lucky.domain.BetTypeEnum;
 import com.jxx.lucky.domain.Player;
@@ -40,7 +40,7 @@ public interface IssueService {
     /**
      * 获取当前期庄家
      */
-    Map<BankerTypeEnum, PointGameBanker> getCurrentBanker();
+    Map<BankerTypeEnum, Banker> getCurrentBanker();
 
     /**
      * 获取等待中庄家

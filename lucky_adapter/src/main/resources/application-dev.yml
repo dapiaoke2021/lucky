@@ -7,3 +7,11 @@ logging:
     com.jxx: DEBUG
 
 point-source: eth
+lucky:
+  simple: haha
+  banker-min-money: 100000
+  game-config:
+     - bankType: NN
+       gameClass: com.jxx.lucky.domain.NNGame
+     - bankType: SN
+       gameClass: com.jxx.lucky.domain.PointGame

@@ -6,5 +6,5 @@ import java.math.BigDecimal;
 
 @Data
 public class ResultType {
-    protected BigDecimal odds;
+    protected Integer odds;
 }

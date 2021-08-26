@@ -15,11 +15,13 @@ import org.springframework.util.StringUtils;
  * @author a1
  */
 @Slf4j
-@Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
     private String secret;
+
+    public JwtUtil(String secret) {
+        this.secret = secret;
+    }
 
     /**
      * Tries to parse specified String as a JWT token. If successful, returns User object with username, id and role prefilled (extracted from token).

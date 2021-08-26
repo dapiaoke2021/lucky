@@ -1,16 +1,29 @@
 package com.jxx.lucky.domain;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
+
 /**
  * 庄家类型
  * @author a1
  */
 public enum BankerTypeEnum {
     // 大小
-    BIG_SMALL,
+    BIG_SMALL(0),
     // 单双
-    OOD_EVEN,
+    OOD_EVEN(1),
     // 波胆
-    NUMBER,
+    NUMBER(2),
+    // 扫牛
+    SN(3),
     // 牛牛
-    NN;
+    NN(4),
+    // 对子
+    DUI(5);
+
+    BankerTypeEnum(Integer bankerType) {
+        this.bankerType = bankerType;
+    }
+
+    @EnumValue
+    Integer bankerType;
 }

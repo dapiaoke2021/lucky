@@ -2,13 +2,17 @@ package com.jxx.lucky.domain.nn;
 
 import com.jxx.lucky.domain.ResultType;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
+@NoArgsConstructor
 @Data
 public class NNGameResultType extends ResultType implements Comparable<NNGameResultType> {
-    NiuEnum niu;
+    protected NiuEnum niu;
     Integer maxPoint;
+
+
 
     public NNGameResultType(String point) {
         this.niu = getNiu(point);
@@ -16,15 +20,36 @@ public class NNGameResultType extends ResultType implements Comparable<NNGameRes
         this.odds = getOdds(this.niu);
     }
 
-    private BigDecimal getOdds(NiuEnum niuEnum) {
-        return BigDecimal.ONE;
+    private Integer getOdds(NiuEnum niuEnum) {
+        switch (niuEnum) {
+            case NIL:
+            case NIU_1:
+            case NIU_2:
+            case NIU_3:
+            case NIU_4:
+            case NIU_5:
+            case NIU_6:
+                return 2;
+            case NIU_7:
+                return 3;
+            case NIU_8:
+                return 4;
+            case NIU_9:
+                return 5;
+            case NIU_NIU:
+                return 6;
+            default:
+                return null;
+        }
     }
 
-    private NiuEnum getNiu(String points) {
+    protected NiuEnum getNiu(String points) {
         Integer[] cards = new Integer[5];
-        for (int i = 0; i < points.length(); i++) {
-            cards[i] = Integer.valueOf(String.valueOf(points.charAt(i)));
-        }
+        cards[0] = Integer.valueOf(String.valueOf(points.charAt(points.length() - 1)));
+        cards[1] = Integer.valueOf(String.valueOf(points.charAt(points.length() - 2)));
+        cards[2] = Integer.valueOf(String.valueOf(points.charAt(points.length() - 4)));
+        cards[3] = Integer.valueOf(String.valueOf(points.charAt(points.length() - 5)));
+        cards[4] = Integer.valueOf(String.valueOf(points.charAt(points.length() - 6)));
 
         // 计算总点数
         int sums = 0;
@@ -61,11 +86,13 @@ public class NNGameResultType extends ResultType implements Comparable<NNGameRes
         }
     }
 
-    private Integer getMaxPoint(String points) {
+    protected Integer getMaxPoint(String points) {
         int maxPoint = 0;
-        for (int i = 0; i < points.length(); i++) {
-            maxPoint = Math.max(Integer.parseInt(String.valueOf(points.charAt(i))), maxPoint);
-        }
+        maxPoint = Math.max(Integer.parseInt(String.valueOf(points.charAt(points.length() - 1))), maxPoint);
+        maxPoint = Math.max(Integer.parseInt(String.valueOf(points.charAt(points.length() - 2))), maxPoint);
+        maxPoint = Math.max(Integer.parseInt(String.valueOf(points.charAt(points.length() - 4))), maxPoint);
+        maxPoint = Math.max(Integer.parseInt(String.valueOf(points.charAt(points.length() - 5))), maxPoint);
+        maxPoint = Math.max(Integer.parseInt(String.valueOf(points.charAt(points.length() - 6))), maxPoint);
         return maxPoint;
     }
 

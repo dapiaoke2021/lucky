@@ -19,7 +19,7 @@ public class BetRecordDO {
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long playerId;
-    private BetTypeEnum betType;
+    private Integer betType;
     private Integer money;
     private String issueNo;
     private BetStateEnum state;

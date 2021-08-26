@@ -20,9 +20,6 @@ public class BtcUsdtPointGeneratorTest {
 
     @Test
     public void testGetPoint() {
-        BtcUsdtPointGenerator btcUsdtPointGenerator = new BtcUsdtPointGenerator();
-        Integer point = btcUsdtPointGenerator.getPoint("08052112");
-        Assertions.assertEquals(4, point);
     }
 
 }

@@ -6,12 +6,12 @@ import com.jxx.lucky.domain.Player;
 import com.jxx.lucky.domain.Robot;
 import com.jxx.lucky.service.IssueService;
 import com.jxx.lucky.service.RobotService;
-import com.jxx.user.service.IUserServiceApi;
+import com.jxx.user.service.IUserService;
 import com.jxx.user.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.dubbo.config.annotation.Reference;
-import org.apache.dubbo.config.annotation.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,8 +22,8 @@ public class RobotServiceImpl implements RobotService {
 
     private IssueService issueService;
 
-    @Reference
-    IUserServiceApi userService;
+    @Autowired
+    IUserService userService;
 
     @Value("${robot-min-money}")
     private Integer robotMinMoney;
@@ -55,6 +55,7 @@ public class RobotServiceImpl implements RobotService {
 
     @Override
     public boolean isRobot(Long playerId) {
+        log.debug("是否为机器人：playerId = {}, inGameRobotMap={}", playerId, inGameRobotMap);
         return inGameRobotMap.containsKey(playerId);
     }
 
@@ -72,6 +73,7 @@ public class RobotServiceImpl implements RobotService {
     @Override
     public void handleIssueOpenEvent() {
         inGameRobotMap.forEach((robotId, robot) -> {
+            log.debug("robot={}", robot);
             Integer onGoingIssueCount = robot.getOnGoingIssueCount();
             if (onGoingIssueCount != null) {
                 if (onGoingIssueCount > 0) {
@@ -84,11 +86,13 @@ public class RobotServiceImpl implements RobotService {
     }
 
     @Override
-    public void handleBecameBankerEvent(BankerTypeEnum bankerType, Player banker) {
+    public void handleBecameBankerEvent(BankerTypeEnum bankerType, Long playerId) {
+        log.debug("成为庄家消息：playerId = {}, bankerType = {}", playerId, bankerType);
         Robot robot = new Robot();
         robot.setBankerType(bankerType);
-        robot.setId(banker.getId());
-        inGameRobotMap.put(banker.getId(), robot);
+        robot.setId(playerId);
+        inGameRobotMap.put(playerId, robot);
+        log.debug("成功庄家消息：inGameRobotMap={}", inGameRobotMap);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.jxx.lucky.domain;
 
-import com.jxx.lucky.domain.point.PointGameBanker;
 import com.jxx.lucky.param.BetParam;
 import lombok.Data;
 
@@ -41,7 +40,6 @@ public abstract class Issue {
 
     public abstract void becomeBanker(BankerTypeEnum bankerType, Player player);
     public abstract void open(String[] points);
-    public abstract List<BetType> getHitBets();
     public abstract void bet(Player player, List<BetParam> bets, String betNo);
-    public abstract void unBet(Player player, BetTypeEnum type);
+
 }
