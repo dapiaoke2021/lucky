@@ -5,6 +5,7 @@ import com.jxx.lucky.domain.BankerTypeEnum;
 import com.jxx.lucky.domain.BetTypeEnum;
 import com.jxx.lucky.domain.Player;
 import com.jxx.lucky.param.BetParam;
+import com.jxx.lucky.vo.CurrentIssueDataVO;
 
 import java.util.List;
 import java.util.Map;
@@ -84,4 +85,11 @@ public interface IssueService {
      * 停止当期投注
      */
     void closeBet();
+
+    /**
+     * 获取当期期号,当期数据
+     * @return
+     */
+    CurrentIssueDataVO currentIssueData();
+
 }

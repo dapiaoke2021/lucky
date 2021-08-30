@@ -1,11 +1,15 @@
 package com.jxx.lucky.service.impl;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.cola.exception.ExceptionFactory;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.binance.client.model.market.Candlestick;
 import com.jxx.lucky.config.IssueGameProperty;
 import com.jxx.lucky.domain.*;
 import com.jxx.lucky.domain.nn.IssueNN;
+import com.jxx.lucky.domain.nn.NNGameResultType;
 import com.jxx.lucky.dos.BankerRecordDO;
 import com.jxx.lucky.dos.BetRecordDO;
 import com.jxx.lucky.dos.IssueDO;
@@ -14,8 +18,10 @@ import com.jxx.lucky.mapper.BankerRecordMapper;
 import com.jxx.lucky.mapper.BetMapper;
 import com.jxx.lucky.mapper.IssueMapper;
 import com.jxx.lucky.param.BetParam;
+import com.jxx.lucky.service.IPointGenerator;
 import com.jxx.lucky.service.IssueService;
 import com.jxx.lucky.service.RobotService;
+import com.jxx.lucky.vo.CurrentIssueDataVO;
 import com.jxx.user.service.IUserService;
 import com.jxx.user.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +33,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -47,6 +55,8 @@ public class IssueServiceImpl implements IssueService {
 
     @Autowired
     IUserService userService;
+    @Autowired
+    IPointGenerator pointGenerator;
 
     BetMapper betMapper;
     IssueMapper issueMapper;
@@ -311,6 +321,34 @@ public class IssueServiceImpl implements IssueService {
     @Override
     public void closeBet() {
         currentIssue.setState(IssueStateEnum.SETTLE);
+    }
+
+    @Override
+    public CurrentIssueDataVO currentIssueData() {
+
+
+
+        CurrentIssueDataVO currentIssueDataVO = new CurrentIssueDataVO();
+        String currentIssueNo = this.getCurrentIssueNo();
+        Candlestick candlestick;
+        try{
+            candlestick = pointGenerator.getCandlestick(currentIssueNo);
+        }catch (Exception e) {
+            candlestick = new Candlestick();
+            candlestick.setHigh(RandomUtil.randomBigDecimal(BigDecimal.valueOf(30000),BigDecimal.valueOf(40000)).setScale(2,BigDecimal.ROUND_UP));
+            candlestick.setLow(RandomUtil.randomBigDecimal(BigDecimal.valueOf(30000),BigDecimal.valueOf(40000)).setScale(2,BigDecimal.ROUND_UP));
+            candlestick.setClose(RandomUtil.randomBigDecimal(BigDecimal.valueOf(30000),BigDecimal.valueOf(40000)).setScale(2,BigDecimal.ROUND_UP));
+        }
+        log.debug("point = {}", JSONUtil.toJsonStr(candlestick));
+        currentIssueDataVO.setCurrentIssueNo(currentIssueNo);
+        currentIssueDataVO.setHign(candlestick.getHigh());
+        currentIssueDataVO.setLow(candlestick.getLow());
+        currentIssueDataVO.setClose(candlestick.getClose());
+        currentIssueDataVO.setHignPoint(new NNGameResultType(currentIssueDataVO.getHign().toString()).getNiu());
+        currentIssueDataVO.setLowPoint(new NNGameResultType(currentIssueDataVO.getLow().toString()).getNiu());
+        currentIssueDataVO.setClosePoint(new NNGameResultType(currentIssueDataVO.getClose().toString()).getNiu());
+
+        return currentIssueDataVO;
     }
 
 

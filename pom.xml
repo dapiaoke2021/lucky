@@ -18,6 +18,9 @@
         <module>user_adapter</module>
         <module>api</module>
         <module>lucky_adapter</module>
+        <module>netty</module>
+        <module>netty_adapter</module>
+        <module>binance_client</module>
     </modules>
 
     <properties>
