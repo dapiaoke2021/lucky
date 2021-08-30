@@ -44,6 +44,8 @@ public class NNGameResultType extends ResultType implements Comparable<NNGameRes
     }
 
     protected NiuEnum getNiu(String points) {
+        points = new BigDecimal(points).setScale(2).toString();
+        System.out.println(points);
         Integer[] cards = new Integer[5];
         cards[0] = Integer.valueOf(String.valueOf(points.charAt(points.length() - 1)));
         cards[1] = Integer.valueOf(String.valueOf(points.charAt(points.length() - 2)));
@@ -87,6 +89,7 @@ public class NNGameResultType extends ResultType implements Comparable<NNGameRes
     }
 
     protected Integer getMaxPoint(String points) {
+        points = new BigDecimal(points).setScale(2).toString();
         int maxPoint = 0;
         maxPoint = Math.max(Integer.parseInt(String.valueOf(points.charAt(points.length() - 1))), maxPoint);
         maxPoint = Math.max(Integer.parseInt(String.valueOf(points.charAt(points.length() - 2))), maxPoint);

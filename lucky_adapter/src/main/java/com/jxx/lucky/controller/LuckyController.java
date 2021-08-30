@@ -5,29 +5,24 @@ import com.alibaba.cola.dto.PageResponse;
 import com.alibaba.cola.dto.Response;
 import com.alibaba.cola.dto.SingleResponse;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jxx.common.aop.UserId;
 import com.jxx.lucky.domain.BankerTypeEnum;
 import com.jxx.lucky.domain.BetTypeEnum;
 import com.jxx.lucky.dos.BetRecordDO;
 import com.jxx.lucky.mapper.BetMapper;
-import com.jxx.lucky.mapper.IssueMapper;
+import com.jxx.lucky.param.BetParam;
 import com.jxx.lucky.service.IssueService;
 import com.jxx.lucky.vo.BetTypeVO;
-import com.jxx.lucky.param.BetParam;
 import com.jxx.lucky.vo.BetVO;
+import com.jxx.lucky.vo.CurrentIssueDataVO;
 import com.jxx.lucky.vo.IssueBankerVO;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -40,6 +35,12 @@ public class LuckyController {
 
     @Autowired
     BetMapper betMapper;
+
+    @ApiOperation("当前期号,期号的数据")
+    @GetMapping("/currentIssueData")
+    public SingleResponse<CurrentIssueDataVO> currentIssueData() {
+        return SingleResponse.of(issueService.currentIssueData());
+    }
 
     @ApiOperation("下注区域信息")
     @GetMapping("/betType")
@@ -54,6 +55,8 @@ public class LuckyController {
             betVO.setTop(topMap.get(betType));
             bets.add(betVO);
         }
+
+        bets = bets.stream().sorted(Comparator.comparing(BetTypeVO::getBetType)).collect(Collectors.toList());
         return MultiResponse.of(bets);
     }
 

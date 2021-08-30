@@ -1,0 +1,45 @@
+netty:
+  port: 8888 # Netty Server ??
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${MYSQL_URL}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+  profiles:
+    active: ${ENV}
+  redis:
+    host: ${REDIS_HOST}
+    password: ${REDIS_PASSWORD}
+  cloud:
+    # Spring Cloud Stream ?????? BindingServiceProperties ?
+    stream:
+      # Binding ?????? BindingProperties Map
+      bindings:
+        user-input:
+          destination: lucky # ???????? RocketMQ Topic
+          content-type: application/json # ????????? JSON
+          group: user-lucky # ?????
+      # Spring Cloud Stream RocketMQ ???
+      rocketmq:
+        # RocketMQ Binder ?????? RocketMQBinderConfigurationProperties ?
+        binder:
+          name-server: ${ROCKET_MQ_NAME_SERVER} # RocketMQ Namesrv ??
+        # RocketMQ ??? Binding ?????? RocketMQBindingProperties Map
+        bindings:
+          user-input:
+            # RocketMQ Consumer ?????? RocketMQConsumerProperties ?
+            consumer:
+              enabled: true # ?????????? true
+              broadcasting: false # ???????????? false ??????
+  main:
+    web-application-type: none
+
+mybatis:
+  mapper-locations: classpath:mapper/*Mapper.xml
+  type-aliases-package: com.jxx.netty.dos
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+mybatis-plus:
+  type-enums-package: com.jxx.netty.enums*
