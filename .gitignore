@@ -3,3 +3,4 @@
 spy.log
 *.iml
 admin_vue/dist/*
+logs/

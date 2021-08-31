@@ -15,7 +15,9 @@ public class BankerRecordDO {
     @TableId(type = IdType.AUTO)
     private Long id;
     private String issueNo;
+    private String pointSource;
     private Long playerId;
     private BankerTypeEnum bankerType;
-    private Integer amount;
+    private Integer money;
+
 }

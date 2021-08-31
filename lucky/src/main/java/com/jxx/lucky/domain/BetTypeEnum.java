@@ -2,6 +2,7 @@ package com.jxx.lucky.domain;
 
 /**
  * 押注类型
+ * 顺序不能更改，只能添加。数据库中存储的下注类型与此定义一致。
  * @author a1
  */
 

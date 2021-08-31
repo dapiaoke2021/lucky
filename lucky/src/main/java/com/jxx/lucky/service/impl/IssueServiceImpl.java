@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.cola.exception.ExceptionFactory;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.binance.client.model.market.Candlestick;
 import com.jxx.lucky.config.IssueGameProperty;
@@ -13,6 +14,7 @@ import com.jxx.lucky.domain.nn.NNGameResultType;
 import com.jxx.lucky.dos.BankerRecordDO;
 import com.jxx.lucky.dos.BetRecordDO;
 import com.jxx.lucky.dos.IssueDO;
+import com.jxx.lucky.dos.ResultDO;
 import com.jxx.lucky.event.*;
 import com.jxx.lucky.mapper.BankerRecordMapper;
 import com.jxx.lucky.mapper.BetMapper;
@@ -35,11 +37,13 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author a1
@@ -69,6 +73,9 @@ public class IssueServiceImpl implements IssueService {
     @Value("${banker-min-money}")
     Integer bankerMinMoney;
 
+    @Value("${point-source}")
+    String pointSource;
+
     @Autowired
     IssueGameProperty gameConfig;
 
@@ -88,29 +95,34 @@ public class IssueServiceImpl implements IssueService {
 
         bankerQueueMap = new ConcurrentHashMap<>();
 
-        currentIssue = new IssueNN();
-        currentIssue.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
-        if(issueMapper.selectById(currentIssue.getIssueNo()) == null) {
-            IssueDO issueDO = new IssueDO();
-            issueDO.setIssueNo(currentIssue.getIssueNo());
-            issueDO.setState(IssueStateEnum.BETTING);
-            issueMapper.insert(issueDO);
-        }
+
     }
 
     @PostConstruct
     public void initGame() {
         log.debug("gameConfig {}, bankerMinMoney {}", gameConfig, bankerMinMoney);
+
+        currentIssue = new IssueNN();
         currentIssue.buildIssue(gameConfig.getGameConfig());
+
+        currentIssue.setIssueNo(DateUtil.format(DateUtil.date(), "MMddHHmm"));
+        if(issueMapper.selectById(currentIssue.getIssueNo()) == null) {
+            IssueDO issueDO = new IssueDO();
+            issueDO.setIssueNo(currentIssue.getIssueNo());
+            issueDO.setState(IssueStateEnum.BETTING);
+            issueDO.setPointSource(pointSource);
+            issueMapper.insert(issueDO);
+        }
 
         gameConfig.getGameConfig().forEach(gameConfig -> {
             Player robot = robotService.createRobot();
-            currentIssue.becomeBanker(gameConfig.getBankType(), robotService.createRobot());
-            log.debug("发送消息成为庄家消息");
+            currentIssue.becomeBanker(gameConfig.getBankType(), robot);
             applicationEventPublisher.publishEvent(
                     new BecameBankerEvent(gameConfig.getBankType().name(), robot.getMoney(), robot.getId())
             );
         });
+
+        log.debug("当前庄家:{}", getCurrentBanker());
     }
 
     @PostConstruct
@@ -130,15 +142,18 @@ public class IssueServiceImpl implements IssueService {
             BetRecordDO betRecordDO = new BetRecordDO();
             betRecordDO.setBetType(bet.getBetType().ordinal());
             betRecordDO.setIssueNo(currentIssue.getIssueNo());
-            betRecordDO.setMoney(bet.getAmount());
+            betRecordDO.setMoney(player.getMoney());
             betRecordDO.setPlayerId(playerId);
             betRecordDO.setState(BetStateEnum.ONGOING);
             betRecordDO.setBetNo(betNo);
+            betRecordDO.setBet(bet.getAmount());
+            betRecordDO.setPointSource(pointSource);
             betMapper.insert(betRecordDO);
         }
         currentIssue.bet(player, bets, betNo);
 
         Integer totalBetAmount = bets.stream().reduce(0, (sum, bet) -> sum + bet.getAmount(), Integer::sum);
+        // todo: 回滚的时候要撤销下注
         applicationEventPublisher.publishEvent(new BetEvent(playerId, totalBetAmount));
         return betNo;
     }
@@ -200,7 +215,7 @@ public class IssueServiceImpl implements IssueService {
         bankerRecordDO.setBankerType(bankerType);
         bankerRecordDO.setIssueNo(issue.getIssueNo());
         bankerRecordDO.setPlayerId(player.getId());
-        bankerRecordDO.setAmount(player.getMoney());
+        bankerRecordDO.setMoney(player.getMoney());
         bankerRecordMapper.insert(bankerRecordDO);
 
         issue.becomeBanker(bankerType, player);
@@ -261,6 +276,7 @@ public class IssueServiceImpl implements IssueService {
 
         // 庄家处理
         Map<BankerTypeEnum, Banker> currentBankerMap = getCurrentBanker();
+        log.debug("当前庄家:{}", currentBankerMap);
         currentBankerMap.forEach((bankerType, currentBanker) -> {
             boolean isOff = offBankers.stream().anyMatch(
                     offBank -> offBank.getUserId().equals(currentBanker.getUserId()));
@@ -287,6 +303,7 @@ public class IssueServiceImpl implements IssueService {
                 Player player = new Player();
                 player.setId(currentBanker.getUserId());
                 player.setMoney(nextIssueTopBet);
+                log.debug("续庄：{}", player);
                 becomeBanker(player, bankerType, nextIssue);
             }
         });
@@ -296,6 +313,7 @@ public class IssueServiceImpl implements IssueService {
         IssueDO issueDO = new IssueDO();
         issueDO.setIssueNo(nextIssue.getIssueNo());
         issueDO.setState(IssueStateEnum.BETTING);
+        issueDO.setPointSource(pointSource);
         issueMapper.insert(issueDO);
 
         applicationEventPublisher.publishEvent(
@@ -325,9 +343,6 @@ public class IssueServiceImpl implements IssueService {
 
     @Override
     public CurrentIssueDataVO currentIssueData() {
-
-
-
         CurrentIssueDataVO currentIssueDataVO = new CurrentIssueDataVO();
         String currentIssueNo = this.getCurrentIssueNo();
         Candlestick candlestick;
@@ -351,45 +366,90 @@ public class IssueServiceImpl implements IssueService {
         return currentIssueDataVO;
     }
 
+    @Override
+    public void getHistory(int count) {
+        QueryWrapper<IssueDO> queryWrapper = new QueryWrapper<>();
+
+    }
+
 
     @Transactional(rollbackFor = Exception.class)
     protected void saveIssue(Issue currentIssue, String[] points) {
         // 如果保存错误，在异常处理中将所有投注记录设置为失效（INIT，OPENED, FAIL）
         saveIssueResult(points);
         savePlayerBets();
-        saveBanker(getCurrentBanker().values());
+        saveBanker(getCurrentBanker().values(), points);
     }
 
-    private void saveBanker(Collection<Banker> bankers) {
+    private void saveBanker(Collection<Banker> bankers, String[] points) {
+        Map<BetTypeEnum, Integer> betMap = currentIssue.getBetMap();
         bankers.forEach(banker -> {
-            BankerRecordDO bankerRecordDO = new BankerRecordDO();
-            bankerRecordDO.setBankerType(banker.getType());
-            bankerRecordDO.setId(banker.getUserId());
-            bankerRecordDO.setIssueNo(currentIssue.getIssueNo());
-            bankerRecordDO.setAmount(banker.getResult());
+            if(robotService.isRobot(banker.getUserId())) {
+                return;
+            }
+            UserVO bankerUser = userService.getUser(banker.getUserId());
+            Map<BetTypeEnum, Integer> betResult = banker.getBetResult();
+            String betNo = banker.getUserId().toString() + "-" + DateUtil.format(DateUtil.date(), "yyyyMMddHHmmss");
+            betResult.forEach((betType, amount) -> {
+                if (betMap.get(betType).equals(0)) {
+                    return;
+                }
+                BetRecordDO betRecordDO = new BetRecordDO();
+                betRecordDO.setBet(betMap.get(betType));
+                betRecordDO.setBetType(betType.ordinal());
+                betRecordDO.setBankerType(banker.getType().ordinal());
+                betRecordDO.setIssueNo(currentIssue.getIssueNo());
+                betRecordDO.setBetNo(betNo);
+                betRecordDO.setPointSource(pointSource);
+                betRecordDO.setState(BetStateEnum.SETTLED);
+                betRecordDO.setPlayerId(banker.getUserId());
+                betRecordDO.setCreateTime(new Timestamp(System.currentTimeMillis()));
+                betRecordDO.setResult(amount);
+
+                // 身上的钱+庄上的钱
+                betRecordDO.setMoney(bankerUser.getMoney() + banker.getMoney());
+
+                betMapper.insert(betRecordDO);
+            });
         });
     }
 
     private void savePlayerBets() {
         Map<Long, Player> playerMap = currentIssue.getPlayerMap();
+        log.debug("第{}期，玩家结算：{}", currentIssue.getIssueNo(), playerMap);
         playerMap.forEach((id, player) -> {
             List<Bet> bets = player.getBets();
+            Integer money = userService.getUser(id).getMoney();
             bets.forEach(bet -> {
                 UpdateWrapper<BetRecordDO> betRecordDOUpdateWrapper = new UpdateWrapper<>();
                 betRecordDOUpdateWrapper.lambda()
                         .eq(BetRecordDO::getIssueNo, currentIssue.getIssueNo())
+                        .eq(BetRecordDO::getPointSource, pointSource)
                         .eq(BetRecordDO::getBetNo, bet.getBetNo())
                         .set(BetRecordDO::getResult, bet.getResult())
-                        .eq(BetRecordDO::getState, BetStateEnum.SETTLED);
+                        .set(BetRecordDO::getMoney, money)
+                        .set(BetRecordDO::getState, BetStateEnum.SETTLED);
+                betMapper.update(null, betRecordDOUpdateWrapper);
             });
         });
     }
 
+    private String convert(BetResult betResult) {
+        return String.valueOf(betResult.getBetType().ordinal()) + "_" + (betResult.isBankerWin() ? 0 : 1);
+    }
+
     private void saveIssueResult(String[] points) {
+        String result = currentIssue.getGameMap().values().stream().map(game -> {
+            return game.getBetResults(points).stream().map(this::convert).collect(Collectors.joining(","));
+        }).collect(Collectors.joining(","));
+
         UpdateWrapper<IssueDO> updateWrapper = new UpdateWrapper<>();
         updateWrapper.lambda()
                 .eq(IssueDO::getIssueNo, currentIssue.getIssueNo())
+                .eq(IssueDO::getPointSource, pointSource)
+                .set(IssueDO::getResult, result)
                 .set(IssueDO::getPoints, String.join(",", points));
+
         issueMapper.update(null, updateWrapper);
     }
 

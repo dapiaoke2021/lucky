@@ -25,7 +25,7 @@ public class PointGame extends GameAbstract{
 
 
     @Override
-    protected List<BetResult> getBetResults(String[] points) {
+    public List<BetResult> getBetResults(String[] points) {
         NNPointGameResultType nnPointGameResultType = new NNPointGameResultType(points[4]);
         return betTypes.stream().map(betType -> {
             BetTypeEnum betTypeEnum = betType.getType();

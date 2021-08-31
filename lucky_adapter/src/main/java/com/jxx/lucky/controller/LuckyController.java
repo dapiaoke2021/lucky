@@ -1,25 +1,24 @@
 package com.jxx.lucky.controller;
 
-import com.alibaba.cola.dto.MultiResponse;
-import com.alibaba.cola.dto.PageResponse;
-import com.alibaba.cola.dto.Response;
-import com.alibaba.cola.dto.SingleResponse;
+import com.alibaba.cola.dto.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jxx.common.aop.UserId;
+import com.jxx.common.param.PageParam;
 import com.jxx.lucky.domain.BankerTypeEnum;
 import com.jxx.lucky.domain.BetTypeEnum;
 import com.jxx.lucky.dos.BetRecordDO;
+import com.jxx.lucky.dos.IssueDO;
 import com.jxx.lucky.mapper.BetMapper;
+import com.jxx.lucky.mapper.IssueMapper;
 import com.jxx.lucky.param.BetParam;
 import com.jxx.lucky.service.IssueService;
-import com.jxx.lucky.vo.BetTypeVO;
-import com.jxx.lucky.vo.BetVO;
-import com.jxx.lucky.vo.CurrentIssueDataVO;
-import com.jxx.lucky.vo.IssueBankerVO;
+import com.jxx.lucky.vo.*;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StreamUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -35,6 +34,9 @@ public class LuckyController {
 
     @Autowired
     BetMapper betMapper;
+
+    @Autowired
+    IssueMapper issueMapper;
 
     @ApiOperation("当前期号,期号的数据")
     @GetMapping("/currentIssueData")
@@ -96,13 +98,14 @@ public class LuckyController {
     @UserId
     @ApiOperation("获取下注记录")
     @GetMapping("/bet")
-    public PageResponse<BetVO> listBetRecord(Long playerId, Page<BetRecordDO> page) {
+    public PageResponse<BetVO> listBetRecord(Long playerId, PageParam pageQuery) {
         QueryWrapper<BetRecordDO> listQueryWrapper = new QueryWrapper<>();
         listQueryWrapper.select("distinct bet_no", "create_time")
                 .lambda()
                 .eq(BetRecordDO::getPlayerId, playerId)
                 .orderByDesc(BetRecordDO::getCreateTime);
-        Page<BetRecordDO> betRecordPage = betMapper.selectPage(page, listQueryWrapper);
+        Page<BetRecordDO> betRecordPage = betMapper.selectPage(
+                new Page<>(pageQuery.getPageIndex(), pageQuery.getPageSize()), listQueryWrapper);
         if (betRecordPage.getRecords().isEmpty()) {
             return PageResponse.buildSuccess();
         }
@@ -125,14 +128,20 @@ public class LuckyController {
             log.debug("betVO={} betRecordDO={}", betVO, betRecordDO);
             betVO.setBetNo(betRecordDO.getBetNo());
             betVO.setIssueNo(betRecordDO.getIssueNo());
+            betVO.setBankerType(BankerTypeEnum.values()[betRecordDO.getBankerType()]);
+            betVO.setMoney(betRecordDO.getMoney());
             if (betVO.getBets() == null) {
                 betVO.setBets(new HashMap<>());
             }
             if (betVO.getResults() == null) {
                 betVO.setResults(new HashMap<>());
             }
-            betVO.getBets().merge(BetTypeEnum.values()[betRecordDO.getBetType()], betRecordDO.getMoney(), Integer::sum);
-            betVO.getResults().merge(BetTypeEnum.values()[betRecordDO.getBetType()], betRecordDO.getResult(), Integer::sum);
+            betVO.getBets().merge(BetTypeEnum.values()[betRecordDO.getBetType()], betRecordDO.getBet(), Integer::sum);
+            betVO.getResults().merge(
+                    BetTypeEnum.values()[betRecordDO.getBetType()],
+                    betRecordDO.getResult() == null ? 0 : betRecordDO.getResult(),
+                    Integer::sum
+            );
         });
 
         betVOMap.forEach((issueNo, betVO) -> {
@@ -150,6 +159,31 @@ public class LuckyController {
                 (int)betRecordPage.getTotal(),
                 (int)betRecordPage.getSize(),
                 (int)betRecordPage.getCurrent());
+    }
+
+    @ApiOperation("获取开奖记录")
+    @GetMapping("/history")
+    public MultiResponse listHistory(String pointSource) {
+        QueryWrapper<IssueDO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .orderByDesc(IssueDO::getId)
+                .eq(IssueDO::getPointSource, pointSource)
+                .last("limit 10");
+        return MultiResponse.of(
+                issueMapper.selectList(queryWrapper).stream().map(issueDO -> {
+                    String result = issueDO.getResult();
+                    if (StringUtils.isEmpty(result)) {
+                        return new ArrayList<>();
+                    }
+                    String[] betResults = result.split(",");
+                    return Arrays.stream(betResults).map(betResult -> {
+                        String[] betResultStrs = betResult.split("_");
+                        BetTypeEnum betType = BetTypeEnum.values()[Integer.parseInt(betResultStrs[0])];
+                        Boolean valid = betResultStrs[1].equals("1");
+                        return new IssuseHistoryVO(betType, valid);
+                    }).collect(Collectors.toList());
+                }).collect(Collectors.toList())
+        );
     }
 
 }

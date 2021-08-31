@@ -23,6 +23,9 @@ public class BetRecordDO {
     private Integer money;
     private String issueNo;
     private BetStateEnum state;
+    private Integer bet;
+    private Integer bankerType;
+    private String pointSource;
 
     private Timestamp createTime;
 

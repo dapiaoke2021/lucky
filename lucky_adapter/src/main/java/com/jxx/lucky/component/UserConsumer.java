@@ -21,7 +21,6 @@ public class UserConsumer {
     @Autowired
     IUserService userService;
 
-    @Async
     @EventListener
     public void handleBetEvent(BetEvent betEvent) {
         userService.changeMoney(betEvent.getPlayerId(), -betEvent.getBetAmount(), MoneyChangeTypeEnum.BET);

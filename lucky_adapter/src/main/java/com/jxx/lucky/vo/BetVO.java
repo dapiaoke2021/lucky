@@ -1,5 +1,6 @@
 package com.jxx.lucky.vo;
 
+import com.jxx.lucky.domain.BankerTypeEnum;
 import com.jxx.lucky.domain.Bet;
 import com.jxx.lucky.domain.BetTypeEnum;
 import io.swagger.annotations.ApiModel;
@@ -25,6 +26,12 @@ public class BetVO {
 
     @ApiModelProperty("盈亏")
     private Map<BetTypeEnum, Integer> results;
+
+    @ApiModelProperty("庄家类型")
+    private BankerTypeEnum bankerType;
+
+    @ApiModelProperty("剩余usdt")
+    private Integer money;
 
     @Data
     @AllArgsConstructor

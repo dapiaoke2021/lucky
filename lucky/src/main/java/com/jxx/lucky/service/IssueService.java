@@ -92,4 +92,8 @@ public interface IssueService {
      */
     CurrentIssueDataVO currentIssueData();
 
+    /**
+     * 获取历史开奖数据
+     */
+    void getHistory(int count);
 }

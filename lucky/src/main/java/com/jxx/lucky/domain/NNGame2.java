@@ -7,7 +7,7 @@ import java.util.List;
 
 public class NNGame2 extends NNGame{
     @Override
-    protected List<BetResult> getBetResults(String[] points) {
+    public List<BetResult> getBetResults(String[] points) {
         String bankerPoint = points[4];
         String xianPoint1 = points[2];
         String xianPoint2 = points[3];

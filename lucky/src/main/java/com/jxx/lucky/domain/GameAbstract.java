@@ -2,6 +2,7 @@ package com.jxx.lucky.domain;
 
 import com.alibaba.cola.exception.ExceptionFactory;
 import com.jxx.lucky.param.BetParam;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 public abstract class GameAbstract implements Game {
     /**
      * 庄家
@@ -51,6 +53,7 @@ public abstract class GameAbstract implements Game {
         }
 
         this.banker = new Banker(player, bankerType);
+        log.debug("游戏{} 庄家{}", this.name, this.banker);
         updateTop(banker);
     }
 
@@ -160,6 +163,6 @@ public abstract class GameAbstract implements Game {
             topBetMap.put(betType.getType(), banker.getMoney()/ (betType.getOdds() - 1));
         });
     }
-    protected abstract List<BetResult> getBetResults(String[] points);
+    public abstract List<BetResult> getBetResults(String[] points);
     protected abstract BetParam setOdds(BetParam betParam);
 }

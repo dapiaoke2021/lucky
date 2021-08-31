@@ -46,10 +46,15 @@ public class RobotServiceImpl implements RobotService {
 
     @Override
     public Player createRobot() {
-        UserVO robot = userService.getRobot(RandomUtil.randomInt(robotMinMoney, robotMaxMoney));
+        UserVO user = userService.getRobot(RandomUtil.randomInt(robotMinMoney, robotMaxMoney));
         Player player = new Player();
-        player.setId(robot.getId());
-        player.setMoney(robot.getMoney());
+        player.setId(user.getId());
+        player.setMoney(user.getMoney());
+
+        Robot robot = new Robot();
+        robot.setId(user.getId());
+        robot.setMoney(user.getMoney());
+        inGameRobotMap.put(user.getId(), robot);
         return player;
     }
 
@@ -67,6 +72,7 @@ public class RobotServiceImpl implements RobotService {
             return;
         }
 
+        log.debug("机器人{} 准备下庄", playerId);
         robot.setOnGoingIssueCount(RandomUtil.randomInt(minOngoingIssue, maxOngoingIssue));
     }
 
@@ -88,11 +94,13 @@ public class RobotServiceImpl implements RobotService {
     @Override
     public void handleBecameBankerEvent(BankerTypeEnum bankerType, Long playerId) {
         log.debug("成为庄家消息：playerId = {}, bankerType = {}", playerId, bankerType);
-        Robot robot = new Robot();
-        robot.setBankerType(bankerType);
-        robot.setId(playerId);
-        inGameRobotMap.put(playerId, robot);
-        log.debug("成功庄家消息：inGameRobotMap={}", inGameRobotMap);
+        if (isRobot(playerId)) {
+            Robot robot = new Robot();
+            robot.setBankerType(bankerType);
+            robot.setId(playerId);
+            inGameRobotMap.put(playerId, robot);
+        }
+        log.debug("成为庄家消息：inGameRobotMap={}", inGameRobotMap);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.jxx.lucky.domain;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,12 +13,14 @@ public class Banker {
     protected Integer money;
     protected Integer result;
     protected BankerTypeEnum type;
+    protected Map<BetTypeEnum, Integer> betResult;
 
     public Banker(Player player, BankerTypeEnum type) {
         this.userId = player.id;
         this.money = player.money;
         this.result = 0;
         this.type = type;
+        this.betResult = new HashMap<>();
     }
 
     public int open(Map<BetTypeEnum, Integer> betMap, List<BetResult> bankerBetTypeResults) {
@@ -26,9 +29,19 @@ public class Banker {
 
         for (BetResult bankerBetTypeResult : bankerBetTypeResults) {
             if(bankerBetTypeResult.isBankerWin()) {
-                totalWin += (bankerBetTypeResult.getOdds() - 1) * betMap.getOrDefault(bankerBetTypeResult.getBetType(), 0);
+                int win = (bankerBetTypeResult.getOdds() - 1) * betMap.getOrDefault(bankerBetTypeResult.getBetType(), 0);
+                betResult.put(
+                        bankerBetTypeResult.getBetType(),
+                        BigDecimal.valueOf(win).multiply(BigDecimal.ONE.subtract(GameConstant.TAX)).intValue()
+                );
+                totalWin += win;
             } else {
-                totalLose += (bankerBetTypeResult.getOdds() - 1) * betMap.getOrDefault(bankerBetTypeResult.getBetType(), 0);
+                int lose = (bankerBetTypeResult.getOdds() - 1) * betMap.getOrDefault(bankerBetTypeResult.getBetType(), 0);
+                betResult.put(
+                        bankerBetTypeResult.getBetType(),
+                        -lose
+                );
+                totalLose += lose;
             }
         }
 

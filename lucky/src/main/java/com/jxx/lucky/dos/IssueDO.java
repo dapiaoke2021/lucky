@@ -1,5 +1,6 @@
 package com.jxx.lucky.dos;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jxx.lucky.domain.IssueStateEnum;
@@ -11,8 +12,11 @@ import lombok.Data;
 @TableName("issue")
 @Data
 public class IssueDO {
-    @TableId
+    @TableId(type = IdType.AUTO)
+    private Long id;
     private String issueNo;
     private String points;
+    private String pointSource;
     private IssueStateEnum state;
+    private String result;
 }

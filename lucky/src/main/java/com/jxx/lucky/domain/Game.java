@@ -15,4 +15,5 @@ public interface Game {
     Map<BetTypeEnum, Integer> getTopBetMap();
     Map<BetTypeEnum, Integer> getBetMap();
     boolean containBetType(BetTypeEnum betType);
+    public List<BetResult> getBetResults(String[] points);
 }

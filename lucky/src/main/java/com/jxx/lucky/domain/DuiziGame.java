@@ -23,7 +23,7 @@ public class DuiziGame extends GameAbstract{
     }
 
     @Override
-    protected List<BetResult> getBetResults(String[] points) {
+    public List<BetResult> getBetResults(String[] points) {
         String point = points[4];
         Integer[] cards = new Integer[2];
         cards[1] = Integer.parseInt(String.valueOf(point.charAt(point.length() - 2)));

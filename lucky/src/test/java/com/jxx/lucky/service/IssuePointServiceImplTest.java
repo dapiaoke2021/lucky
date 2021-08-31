@@ -138,7 +138,7 @@ public class IssuePointServiceImplTest {
     public void testBecomeBanker() {
         mockGetUser(1L, 1000);
         BankerRecordDO bankerRecordDO1 = new BankerRecordDO();
-        bankerRecordDO1.setAmount(1000);
+        bankerRecordDO1.setMoney(1000);
         bankerRecordDO1.setBankerType(BankerTypeEnum.NN);
         bankerRecordDO1.setPlayerId(1L);
         bankerRecordDO1.setIssueNo(issueNo);

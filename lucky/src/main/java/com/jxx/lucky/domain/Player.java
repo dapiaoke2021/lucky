@@ -44,9 +44,13 @@ public class Player {
             if (playerBetResultOptional.isPresent()) {
                 BetResult playerBetResult = playerBetResultOptional.get();
                 if (playerBetResult.isBankerWin()) {
-                    totalLose += bet.getMoney() * (playerBetResult.getOdds() - 1);
+                    int lose = bet.getMoney() * (playerBetResult.getOdds() - 1);
+                    bet.setResult(-lose);
+                    totalLose += lose;
                 } else {
-                    totalWin += bet.getMoney() * (playerBetResult.getOdds() - 1);
+                    int win = bet.getMoney() * (playerBetResult.getOdds() - 1);
+                    bet.setResult(BigDecimal.ONE.subtract(GameConstant.TAX).multiply(BigDecimal.valueOf(win)).intValue());
+                    totalWin += win;
                 }
                 totalBet += bet.getMoney();
             }
